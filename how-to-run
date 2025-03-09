@@ -1,5 +1,0 @@
-cd build 
-cmake ..
-make
-cd ..
-.\bin\GAME_APPLICATION.exe
