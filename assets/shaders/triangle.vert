@@ -16,5 +16,32 @@ out Varyings {
 
 //TODO: (Req 1) Finish this shader
 
+// Define uniforms for translation and scaling
+uniform vec2 translation = vec2(0.0, 0.0);
+uniform vec2 scale = vec2(1.0, 1.0);
+
 void main(){
+    // Define an array of vertex positions in normalized device coordinates
+    const vec3 positions[3] = vec3[](
+        vec3(-0.5, -0.5, 0.0), // First vertex
+        vec3( 0.5, -0.5, 0.0), // Second vertex
+        vec3( 0.0,  0.5, 0.0)  // Third vertex
+    );
+
+    // Define an array of vertex colors
+    const vec3 colors[3] = vec3[](
+        vec3(1.0, 0.0, 0.0), // Red
+        vec3(0.0, 1.0, 0.0), // Green
+        vec3(0.0, 0.0, 1.0)  // Blue
+    );
+
+    // Get the vertex position and color using the built-in "gl_VertexID"
+    vec3 position = positions[gl_VertexID];
+    vs_out.color = colors[gl_VertexID];
+
+    // Apply scale and translation
+    vec2 transformedPosition = scale * position.xy + translation;
+
+    // Output final position in homogeneous coordinates
+    gl_Position = vec4(transformedPosition, position.z, 1.0);
 }
