@@ -22,7 +22,12 @@ namespace our {
         ~Sampler() { 
             //TODO: (Req 6) Complete this function
             glDeleteSamplers(1, &name);
-         }
+        }
+
+        // This method returns the OpenGL object name of this sampler
+        GLuint getOpenGLName(){
+            return name;
+        }
 
         // This method binds this sampler to the given texture unit
         void bind(GLuint textureUnit) const {
