@@ -27,3 +27,6 @@ screenshots/
 
 # Errors
 errors/
+
+vendor/
+vendor/bullet3
