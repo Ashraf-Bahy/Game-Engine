@@ -14,6 +14,7 @@ namespace our
                                                        // when deleteMarkedEntities is called
     public:
         World() = default;
+        static unsigned int ID;
 
         // This will deserialize a json array of entities and add the new entities to the current world
         // If parent pointer is not null, the new entities will be have their parent set to that given pointer
@@ -31,6 +32,7 @@ namespace our
             Entity *entity = new Entity();
             entity->world = this;
             entities.insert(entity);
+            entity->id = ++ID;
             return entity;
         }
 

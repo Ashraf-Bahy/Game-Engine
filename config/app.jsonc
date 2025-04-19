@@ -154,16 +154,12 @@
       },
       {
         "rotation": [-45, 0, 0],
+        "position": [7, 5, 0],
         "components": [
           {
             "type": "Mesh Renderer",
             "mesh": "monkey",
             "material": "monkey"
-          },
-          {
-            "type": "Movement",
-            "linearVelocity": [0, 0.1, 0],
-            "angularVelocity": [0, 45, 0]
           }
         ]
       },
@@ -248,10 +244,6 @@
             "type": "Mesh Renderer",
             "mesh": "sphere",
             "material": "moon"
-          },
-          {
-            "type": "Movement",
-            "angularVelocity": [0, 90, 0]
           }
         ]
       }
