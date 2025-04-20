@@ -49,11 +49,10 @@ class Playstate : public our::State
         cameraController.update(&world, (float)deltaTime);
         // And finally we use the renderer system to draw the scene
         renderer.render(&world);
-
         // Get a reference to the keyboard object
         auto &keyboard = getApp()->getKeyboard();
 
-        physicsSystem.update((float)deltaTime);
+        physicsSystem.update(&world, (float)deltaTime);
 
         if (keyboard.justPressed(GLFW_KEY_ESCAPE))
         {

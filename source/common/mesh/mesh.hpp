@@ -129,11 +129,6 @@ namespace our
                     indices[i] = elements[i];
                 }
             }
-
-            // create the shape
-            // NOTE: we must track this pointer and delete it when all btCollisionObjects that use it are done with it!
-            const bool USE_QUANTIZED_AABB_COMPRESSION = true;
-            shape = new btBvhTriangleMeshShape(data, USE_QUANTIZED_AABB_COMPRESSION);
         }
 
         // this function should render the mesh

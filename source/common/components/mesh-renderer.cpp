@@ -1,5 +1,6 @@
 #include "mesh-renderer.hpp"
 #include "../asset-loader.hpp"
+#include <iostream>
 
 namespace our
 {
@@ -14,7 +15,10 @@ namespace our
         // Hint: To get a value of type T from a json object "data" where the key corresponding to the value is "key",
         // you can use write: data["key"].get<T>().
         // Look at "source/common/asset-loader.hpp" to know how to use the static class AssetLoader.
+        // std::cout << "Deserializing MeshRendererComponent with data: " << data.dump(4) << std::endl;
+
         mesh = AssetLoader<Mesh>::get(data["mesh"].get<std::string>());
         material = AssetLoader<Material>::get(data["material"].get<std::string>());
+        name = data["mesh"].get<std::string>();
     }
 }

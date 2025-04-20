@@ -1,5 +1,9 @@
 #include "physics.hpp"
 #include "../physics/physics-utils.hpp"
+#include <btBulletDynamicsCommon.h>
+#include <btBulletCollisionCommon.h>
+#include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
+#include "../ecs/transform.hpp"
 
 namespace our
 {
@@ -29,21 +33,126 @@ namespace our
             if (!meshComponent)
                 continue;
 
-            btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(
-                0, // Mass (0 = static object)
-                physics_utils::prepareMotionStateEntity(entity),
-                meshComponent->mesh->shape);
-            btRigidBody *rigidBody = new btRigidBody(rigidBodyCI);
-            rigidBody->setUserPointer(entity);
-            dynamicsWorld->addRigidBody(rigidBody);
-            rigidBodies[entity->id] = rigidBody;
+            // for the rigiid bodies of the system that will not move
+            if (meshComponent->name == "plane")
+            {
+                // create the shape
+                // NOTE: we must track this pointer and delete it when all btCollisionObjects that use it are done with it!
+                const bool USE_QUANTIZED_AABB_COMPRESSION = true;
+                meshComponent->mesh->shape = new btBvhTriangleMeshShape(meshComponent->mesh->data, USE_QUANTIZED_AABB_COMPRESSION);
+                btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(
+                    0, // Mass (0 = static object)
+                    physics_utils::prepareMotionStateEntity(entity),
+                    meshComponent->mesh->shape);
+                btRigidBody *rigidBody = new btRigidBody(rigidBodyCI);
+                rigidBody->setUserPointer(entity);
+                dynamicsWorld->addRigidBody(rigidBody);
+                rigidBodies[entity->id] = rigidBody;
+                meshComponent->bulletBody = rigidBody; // Store the rigid body in the component for later use
+            }
+            // else if (meshComponent->name == "demon")
+            // {
+            //     // Demon is a ghost object (no physical collision, just detection)
+            //     btGhostObject *ghost = new btGhostObject();
+            //     ghost->setCollisionShape(new btCapsuleShape(0.5f, 1.0f)); // Adjust as needed
+            //     ghost->setWorldTransform(physics_utils::getEntityWorldTransform(entity));
+            //     ghost->setUserPointer(entity);
+
+            //     // Set collision flags to make it a ghost
+            //     ghost->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
+
+            //     dynamicsWorld->addCollisionObject(ghost);
+            //     // ghostObjects[entity->id] = ghost; // Store if needed
+            // }
+            else if (meshComponent->name == "monkey" || meshComponent->name == "sphere")
+            {
+                Transform *transform = &entity->localTransform;
+                btTransform btTrans;
+                btTrans.setIdentity();
+                btTrans.setOrigin(btVector3(
+                    transform->position.x,
+                    transform->position.y,
+                    transform->position.z));
+
+                btMotionState *motionState = new btDefaultMotionState(btTrans);
+                // 🟣 Create a sphere shape for the monkey
+                btScalar radius = 1.0f; // Adjust to match your model size
+                btCollisionShape *shape = new btSphereShape(radius);
+
+                // 🏋️ Mass and inertia for dynamics
+                btScalar mass = 1.0f;
+                btVector3 inertia(0, 0, 0);
+                shape->calculateLocalInertia(mass, inertia);
+
+                // ⚙️ Create the rigid body
+                btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(mass, motionState, shape, inertia);
+                btRigidBody *body = new btRigidBody(rigidBodyCI);
+
+                // 📌 Optional: set friction, damping, etc., if needed
+                // body->setFriction(1.0f);
+                // body->setDamping(0.1f, 0.1f);
+
+                // 🧭 Useful for identifying the entity during collision callbacks
+                body->setUserPointer(entity);
+
+                // ➕ Add it to the world
+                dynamicsWorld->addRigidBody(body);
+                rigidBodies[entity->id] = body; // Store for updates
+                meshComponent->bulletBody = body;
+            }
         }
     }
 
-    void PhysicsSystem::update(float deltaTime)
+    void PhysicsSystem::processEntities(World *world)
+    {
+        for (auto entity : world->getEntities())
+        {
+
+            Transform *transform = &entity->localTransform;
+            if (transform)
+                syncTransforms(entity, transform);
+        }
+    }
+
+    void PhysicsSystem::syncTransforms(Entity *entity, Transform *transform)
+    {
+
+        MeshRendererComponent *meshComponent = entity->getComponent<MeshRendererComponent>();
+
+        if (meshComponent && (meshComponent->name == "monkey" || meshComponent->name == "sphere"))
+        {
+            // Update ECS from physics
+            btTransform trans;
+            meshComponent->bulletBody->getMotionState()->getWorldTransform(trans);
+            meshComponent->bulletBody->activate();
+            transform->position = glm::vec3(
+                trans.getOrigin().x(),
+                trans.getOrigin().y(),
+                trans.getOrigin().z());
+            auto rotation = trans.getRotation();
+            auto quat = glm::quat(
+                rotation.w(),
+                rotation.x(),
+                rotation.y(),
+                rotation.z());
+            // Convert quaternion to Euler angles (pitch, yaw, roll)
+            transform->rotation = glm::eulerAngles(quat);
+        }
+    }
+
+    void PhysicsSystem::update(World *world, float deltaTime)
     {
         // Step the physics simulation
-        dynamicsWorld->stepSimulation(deltaTime, 10);
+
+        if (dynamicsWorld)
+        {
+            dynamicsWorld->stepSimulation(deltaTime);
+            processEntities(world);
+        }
+        else
+        {
+            printf("[ERROR] CollisionSystem::stepSimulation: physicsWorld is null!\n");
+        }
     }
 
     void PhysicsSystem::destroy()
@@ -86,5 +195,4 @@ namespace our
         // The two boxes are colliding
         return true;
     }
-
 }
