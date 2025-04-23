@@ -21,9 +21,9 @@ namespace our
     {
     public:
         Type type;
-        glm::vec3 ambient, specular, diffuse; // The color of the light
-        float cutOff;                         // spot cutoff angle in degrees
-        float outerCutOff;                    // spot outer cutoff angle in degrees
+        glm::vec3 ambient, specular, diffuse, direction; // The color of the light
+        float cutOff;                                    // spot cutoff angle in degrees
+        float outerCutOff;                               // spot outer cutoff angle in degrees
 
         float attenuationConstant;  // The constant of the attenuation
         float attenuationLinear;    // The linear of the attenuation

@@ -78,6 +78,10 @@ namespace our
         {
             return new TexturedMaterial();
         }
+        else if (type == "lit")
+        {
+            return new LitMaterial();
+        }
         else
         {
             return new Material();

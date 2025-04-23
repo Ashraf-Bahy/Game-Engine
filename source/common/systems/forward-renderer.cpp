@@ -181,7 +181,7 @@ namespace our
             {
                 LightSource source;
                 source.position = light->getOwner()->getLocalToWorldMatrix() * glm::vec4(0.0, 0.0, 0.0, 1.0f);
-                source.direction = light->getOwner()->getLocalToWorldMatrix() * glm::vec4(0.0, 0.0, -1.0, 0.0f);
+                source.direction = light->getOwner()->getLocalToWorldMatrix() * glm::vec4(light->direction, 0.0);
                 source.type = light->type;
                 source.light = light;
                 lightSources.push_back(source);
@@ -239,7 +239,7 @@ namespace our
             {
                 light_utils::setLightParameters(command.material->shader, lightSources);
                 command.material->shader->set("model", command.localToWorld);
-                command.material->shader->set("view-position", camera->getOwner()->getLocalToWorldMatrix()[3]);
+                command.material->shader->set("view_position", camera->getOwner()->localTransform.position);
             }
             command.mesh->draw();
         }

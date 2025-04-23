@@ -10,7 +10,6 @@ out Varyings {
     vec2 tex_coord;
     vec3 frag_position;
     vec3 frag_normal;
-    vec3 view_position;
 } vs_out;
 
 uniform mat4 model;
@@ -20,6 +19,6 @@ void main(){
     vs_out.color = color;
     vs_out.tex_coord = tex_coord;
     vs_out.frag_position = vec3(model * vec4(position, 1.0));
-    vs_out.frag_normal = mat3(transpose(inverse(model))) * normal;
+    vs_out.frag_normal = normalize(mat3(transpose(inverse(model))) * normal);
     gl_Position = transform * vec4(position, 1.0);
 }

@@ -28,6 +28,7 @@ namespace our
         ambient = data.value("ambient", glm::vec3(0.0f, 0.0f, 0.0f));
         diffuse = data.value("diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
         specular = data.value("specular", glm::vec3(1.0f, 1.0f, 1.0f));
+        direction = data.value("direction", glm::vec3(0.0f, 0.0f, -1.0f));
 
         // Deserialize the spot cutoff angles
         cutOff = data.value("cutOff", 12.5f);
