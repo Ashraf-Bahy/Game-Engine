@@ -24,5 +24,20 @@ namespace our
         {
             moving = data["moving"].get<bool>();
         }
+
+        // Build triangle mesh from vertices/indices
+        triangleMesh = new btTriangleMesh();
+        for (size_t i = 0; i < mesh->cpuIndices.size(); i += 3)
+        {
+            auto &v0 = mesh->cpuVertices[mesh->cpuIndices[i]].position;
+            auto &v1 = mesh->cpuVertices[mesh->cpuIndices[i + 1]].position;
+            auto &v2 = mesh->cpuVertices[mesh->cpuIndices[i + 2]].position;
+
+            triangleMesh->addTriangle(
+                btVector3(v0.x, v0.y, v0.z),
+                btVector3(v1.x, v1.y, v1.z),
+                btVector3(v2.x, v2.y, v2.z));
+        }
     }
+
 }

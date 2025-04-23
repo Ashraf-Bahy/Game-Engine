@@ -3,12 +3,13 @@
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
 #include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
+#include <BulletCollision/CollisionShapes/btShapeHull.h>
 #include "../ecs/transform.hpp"
 
 namespace our
 {
 
-    void PhysicsSystem::initialize(World *world)
+    void PhysicsSystem::initialize(World *world, glm::ivec2 windowSize)
     {
         // Initialize Bullet Physics components
         broadphase = new btDbvtBroadphase();
@@ -19,12 +20,12 @@ namespace our
         dynamicsWorld->setGravity(btVector3(0, -9.81f, 0));
 
         // ghost body (act as the main player)
-        playerGhost = new btGhostObject();
-        playerGhost->setCollisionShape(new btSphereShape(1.0f));
-        playerGhost->setUserPointer((void *)0);
+        // playerGhost = new btGhostObject();
+        // playerGhost->setCollisionShape(new btSphereShape(1.0f));
+        // playerGhost->setUserPointer((void *)0);
         // map_ids[0] = "GHOST";
 
-        dynamicsWorld->addCollisionObject(playerGhost);
+        // dynamicsWorld->addCollisionObject(playerGhost);
 
         // Create rigid bodies for entities with a MeshRendererComponent
         for (auto &entity : world->getEntities())
@@ -32,40 +33,81 @@ namespace our
             MeshRendererComponent *meshComponent = entity->getComponent<MeshRendererComponent>();
             if (!meshComponent)
                 continue;
+            // create the shape
+            // NOTE: we must track this pointer and delete it when all btCollisionObjects that use it are done with it!
 
             // for the rigiid bodies of the system that will not move
-            if (meshComponent->moving == false)
+            if (!meshComponent->moving)
             {
-                // create the shape
-                // NOTE: we must track this pointer and delete it when all btCollisionObjects that use it are done with it!
                 const bool USE_QUANTIZED_AABB_COMPRESSION = true;
-                meshComponent->mesh->shape = new btBvhTriangleMeshShape(meshComponent->mesh->data, USE_QUANTIZED_AABB_COMPRESSION);
+                meshComponent->shape = new btBvhTriangleMeshShape(meshComponent->triangleMesh, USE_QUANTIZED_AABB_COMPRESSION);
+
+                // meshComponent->shape->setLocalScaling(btVector3(
+                //     entity->localTransform.scale.x,
+                //     entity->localTransform.scale.y,
+                //     entity->localTransform.scale.z));
+
                 btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(
                     0, // Mass (0 = static object)
                     physics_utils::prepareMotionStateEntity(entity),
-                    meshComponent->mesh->shape);
+                    meshComponent->shape);
+
                 btRigidBody *rigidBody = new btRigidBody(rigidBodyCI);
                 rigidBody->setUserPointer(entity);
                 dynamicsWorld->addRigidBody(rigidBody);
                 rigidBodies[entity->id] = rigidBody;
                 meshComponent->bulletBody = rigidBody; // Store the rigid body in the component for later use
             }
-            // else if (meshComponent->name == "demon")
-            // {
-            //     // Demon is a ghost object (no physical collision, just detection)
-            //     btGhostObject *ghost = new btGhostObject();
-            //     ghost->setCollisionShape(new btCapsuleShape(0.5f, 1.0f)); // Adjust as needed
-            //     ghost->setWorldTransform(physics_utils::getEntityWorldTransform(entity));
-            //     ghost->setUserPointer(entity);
-
-            //     // Set collision flags to make it a ghost
-            //     ghost->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
-
-            //     dynamicsWorld->addCollisionObject(ghost);
-            //     // ghostObjects[entity->id] = ghost; // Store if needed
-            // }
             else // this object will move
             {
+                // Get the mesh data from the component
+                btTriangleIndexVertexArray *meshData = meshComponent->mesh->data;
+                if (!meshData || meshData->getNumSubParts() == 0)
+                {
+                    // Handle error: no valid mesh data
+                    continue;
+                }
+
+                // Access the first indexed mesh (assuming single sub-part)
+                btIndexedMesh &indexedMesh = meshData->getIndexedMeshArray()[0];
+
+                // Extract vertex data
+                const unsigned char *vertexBase = indexedMesh.m_vertexBase;
+                int numVertices = indexedMesh.m_numVertices;
+                int vertexStride = indexedMesh.m_vertexStride; // Should be 3*sizeof(btScalar)
+
+                // Create convex hull shape and add all vertices
+                btConvexHullShape *convexShape = new btConvexHullShape();
+                // Get entity scale
+                glm::vec3 scale = entity->localTransform.scale;
+
+                // Add vertices WITH SCALING APPLIED
+                for (int i = 0; i < numVertices; ++i)
+                {
+                    const btScalar *vertex = reinterpret_cast<const btScalar *>(vertexBase + i * vertexStride);
+                    convexShape->addPoint(btVector3(
+                        vertex[0] * scale.x, // Apply X scale
+                        vertex[1] * scale.y, // Apply Y scale
+                        vertex[2] * scale.z  // Apply Z scale
+                        ));
+                }
+
+                // Optional: Simplify convex hull for better performance
+                btShapeHull hullSimplifier(convexShape);
+                if (hullSimplifier.buildHull(convexShape->getMargin()))
+                {
+                    // Create simplified shape if hull is built successfully
+                    btConvexHullShape *simplifiedShape = new btConvexHullShape();
+                    for (int i = 0; i < hullSimplifier.numVertices(); ++i)
+                    {
+                        simplifiedShape->addPoint(hullSimplifier.getVertexPointer()[i]);
+                    }
+                    // Swap to use simplified shape
+                    delete convexShape;
+                    convexShape = simplifiedShape;
+                }
+
+                // Set up motion state and transform
                 Transform *transform = &entity->localTransform;
                 btTransform btTrans;
                 btTrans.setIdentity();
@@ -75,32 +117,32 @@ namespace our
                     transform->position.z));
 
                 btMotionState *motionState = new btDefaultMotionState(btTrans);
-                // 🟣 Create a sphere shape for the monkey
-                btScalar radius = 2.0f; // Adjust to match your model size
-                btCollisionShape *shape = new btSphereShape(radius);
-                btConvexHullShape *convexShape = new btConvexHullShape();
-                // 🏋️ Mass and inertia for dynamics
+
+                // Configure mass and inertia
                 btScalar mass = 1.0f;
                 btVector3 inertia(0, 0, 0);
-                shape->calculateLocalInertia(mass, inertia);
+                convexShape->calculateLocalInertia(mass, inertia);
 
-                // ⚙️ Create the rigid body
-                btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(mass, motionState, shape, inertia);
+                // Create rigid body
+                btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(
+                    mass,
+                    motionState,
+                    convexShape,
+                    inertia);
                 btRigidBody *body = new btRigidBody(rigidBodyCI);
-
-                // 📌 Optional: set friction, damping, etc., if needed
-                // body->setFriction(1.0f);
-                // body->setDamping(0.1f, 0.1f);
-
-                // 🧭 Useful for identifying the entity during collision callbacks
                 body->setUserPointer(entity);
 
-                // ➕ Add it to the world
+                // Add to world and store references
                 dynamicsWorld->addRigidBody(body);
-                rigidBodies[entity->id] = body; // Store for updates
+                rigidBodies[entity->id] = body;
                 meshComponent->bulletBody = body;
             }
         }
+
+        debugDrawer = new GLDebugDrawer(windowSize);
+        dynamicsWorld->setDebugDrawer(debugDrawer);
+        if (dynamicsWorld->getDebugDrawer())
+            dynamicsWorld->getDebugDrawer()->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
     }
 
     void PhysicsSystem::processEntities(World *world)
@@ -140,6 +182,38 @@ namespace our
         }
     }
 
+    void PhysicsSystem::debugDrawWorld(World *world)
+    {
+
+        // Manually iterate through all collision objects
+        auto &collisionObjects = dynamicsWorld->getCollisionObjectArray();
+        for (int i = 0; i < collisionObjects.size(); ++i)
+        {
+            btCollisionObject *obj = collisionObjects[i];
+
+            // Set color based on collision flags
+            btVector3 color(1, 1, 1);
+            if (obj->getCollisionFlags() & btCollisionObject::CF_STATIC_OBJECT)
+            {
+                color = btVector3(0, 1, 0);
+            }
+            else if (obj->getCollisionFlags() & btCollisionObject::CF_KINEMATIC_OBJECT)
+            {
+                color = btVector3(1, 1, 0);
+            }
+            else if (obj->getCollisionFlags() & btCollisionObject::CF_DYNAMIC_OBJECT)
+            {
+                color = btVector3(0, 0, 1);
+            }
+            else
+            {
+                color = btVector3(1, 0, 0);
+            }
+            dynamicsWorld->debugDrawObject(obj->getWorldTransform(), obj->getCollisionShape(), color);
+        }
+        debugDrawer->flushLines(world);
+    }
+
     void PhysicsSystem::update(World *world, float deltaTime)
     {
         // Step the physics simulation
@@ -169,6 +243,7 @@ namespace our
         delete dispatcher;
         delete collisionConfiguration;
         delete broadphase;
+        delete debugDrawer;
     }
 
     bool PhysicsSystem::checkCollision(const glm::vec3 &box1_min, const glm::vec3 &box1_max,

@@ -165,9 +165,9 @@
         ]
       },
       {
-        "position": [0, -1, 0],
+        "position": [0, -10, 0],
         "rotation": [-90, 0, 0],
-        "scale": [10, 10, 1],
+        "scale": [100, 100, 1],
         "components": [
           {
             "type": "Mesh Renderer",
@@ -237,7 +237,7 @@
         ]
       },
       {
-        "position": [0, 10, 0],
+        "position": [5, 10, 0],
         "rotation": [45, 45, 0],
         "scale": [5, 5, 5],
         "components": [
@@ -246,6 +246,18 @@
             "mesh": "sphere",
             "material": "moon",
             "moving": true
+          }
+        ]
+      },
+      {
+        "position": [0, 0, 0],
+        "rotation": [0, 0, 0],
+        "scale": [1, 1, 1],
+        "components": [
+          {
+            "type": "Mesh Renderer",
+            "mesh": "cube",
+            "material": "metal"
           }
         ]
       }

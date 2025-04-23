@@ -39,7 +39,7 @@ class Playstate : public our::State
         // Then we initialize the renderer
         auto size = getApp()->getFrameBufferSize();
         renderer.initialize(size, config["renderer"]);
-        physicsSystem.initialize(&world);
+        physicsSystem.initialize(&world, size);
     }
 
     void onDraw(double deltaTime) override
@@ -53,6 +53,7 @@ class Playstate : public our::State
         auto &keyboard = getApp()->getKeyboard();
 
         physicsSystem.update(&world, (float)deltaTime);
+        physicsSystem.debugDrawWorld(&world);
 
         if (keyboard.justPressed(GLFW_KEY_ESCAPE))
         {

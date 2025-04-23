@@ -23,7 +23,9 @@ namespace our
 
     public:
         btTriangleIndexVertexArray *data;
-        btBvhTriangleMeshShape *shape;
+
+        std::vector<Vertex> cpuVertices;
+        std::vector<unsigned int> cpuIndices;
         // The constructor takes two vectors:
         // - vertices which contain the vertex data.
         // - elements which contain the indices of the vertices out of which each rectangle will be constructed.
@@ -31,7 +33,7 @@ namespace our
         // a vertex buffer to store the vertex data on the VRAM,
         // an element buffer to store the element data on the VRAM,
         // a vertex array object to define how to read the vertex & element buffer during rendering
-        Mesh(const std::vector<Vertex> &vertices, const std::vector<unsigned int> &elements)
+        Mesh(const std::vector<Vertex> &vertices, const std::vector<unsigned int> &elements) : cpuVertices(vertices), cpuIndices(elements)
         {
             // TODO: (Req 2) Write this function
             //  remember to store the number of elements in "elementCount" since you will need it for drawing
@@ -69,15 +71,14 @@ namespace our
             // Unbind the VAO
             glBindVertexArray(0);
 
-            // Create a new btTriangleIndexVertexArray object to hold the mesh data
+            // first create a btTriangleIndexVertexArray
+            // NOTE: we must track this pointer and delete it when all shapes are done with it!
             data = new btTriangleIndexVertexArray;
-
+            // add an empty mesh (data makes a copy)
             btIndexedMesh tempMesh;
             data->addIndexedMesh(tempMesh, PHY_FLOAT);
-
             // get a reference to internal copy of the empty mesh
             btIndexedMesh &mesh = data->getIndexedMeshArray()[0];
-
             // allocate memory for the mesh
             mesh.m_numTriangles = elementCount / 3;
             if (elementCount < std::numeric_limits<int16_t>::max())
@@ -94,7 +95,6 @@ namespace our
                 mesh.m_indexType = PHY_INTEGER;
                 mesh.m_triangleIndexStride = 3 * sizeof(int32_t);
             }
-
             mesh.m_numVertices = vertices.size();
             mesh.m_vertexBase = new unsigned char[3 * sizeof(btScalar) * (size_t)mesh.m_numVertices];
             mesh.m_vertexStride = 3 * sizeof(btScalar);
@@ -109,7 +109,6 @@ namespace our
                 vertexData[j + 1] = point.y;
                 vertexData[j + 2] = point.z;
             }
-
             // copy indices into mesh
             if (elementCount < std::numeric_limits<int16_t>::max())
             {
@@ -151,6 +150,8 @@ namespace our
             glDeleteBuffers(1, &VBO);
             glDeleteBuffers(1, &EBO);
             glDeleteVertexArrays(1, &VAO);
+
+            delete data;
         }
 
         Mesh(Mesh const &) = delete;
