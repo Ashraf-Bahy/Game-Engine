@@ -15,6 +15,7 @@ namespace our
         Mesh *mesh;         // The mesh that should be drawn
         Material *material; // The material used to draw the mesh
         std::string name = "";
+        bool moving = false;
         btRigidBody *bulletBody = nullptr;
 
         // The ID of this component type is "Mesh Renderer"

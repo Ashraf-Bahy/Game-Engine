@@ -159,7 +159,8 @@
           {
             "type": "Mesh Renderer",
             "mesh": "monkey",
-            "material": "monkey"
+            "material": "monkey",
+            "moving": true
           }
         ]
       },
@@ -243,7 +244,8 @@
           {
             "type": "Mesh Renderer",
             "mesh": "sphere",
-            "material": "moon"
+            "material": "moon",
+            "moving": true
           }
         ]
       }

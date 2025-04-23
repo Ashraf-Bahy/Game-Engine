@@ -34,7 +34,7 @@ namespace our
                 continue;
 
             // for the rigiid bodies of the system that will not move
-            if (meshComponent->name == "plane")
+            if (meshComponent->moving == false)
             {
                 // create the shape
                 // NOTE: we must track this pointer and delete it when all btCollisionObjects that use it are done with it!
@@ -64,7 +64,7 @@ namespace our
             //     dynamicsWorld->addCollisionObject(ghost);
             //     // ghostObjects[entity->id] = ghost; // Store if needed
             // }
-            else if (meshComponent->name == "monkey" || meshComponent->name == "sphere")
+            else // this object will move
             {
                 Transform *transform = &entity->localTransform;
                 btTransform btTrans;
@@ -76,9 +76,9 @@ namespace our
 
                 btMotionState *motionState = new btDefaultMotionState(btTrans);
                 // 🟣 Create a sphere shape for the monkey
-                btScalar radius = 1.0f; // Adjust to match your model size
+                btScalar radius = 2.0f; // Adjust to match your model size
                 btCollisionShape *shape = new btSphereShape(radius);
-
+                btConvexHullShape *convexShape = new btConvexHullShape();
                 // 🏋️ Mass and inertia for dynamics
                 btScalar mass = 1.0f;
                 btVector3 inertia(0, 0, 0);
