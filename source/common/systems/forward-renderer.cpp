@@ -1,5 +1,6 @@
 #include "forward-renderer.hpp"
 #include "../mesh/mesh-utils.hpp"
+#include "../light/light-utils.hpp"
 #include "../texture/texture-utils.hpp"
 #include <iostream>
 
@@ -180,7 +181,7 @@ namespace our
             {
                 LightSource source;
                 source.position = light->getOwner()->getLocalToWorldMatrix() * glm::vec4(0.0, 0.0, 0.0, 1.0f);
-                source.direction = light->getOwner()->getLocalToWorldMatrix() * glm::vec4(light->direction, 0.0);
+                source.direction = light->getOwner()->getLocalToWorldMatrix() * glm::vec4(0.0, 0.0, -1.0, 0.0f);
                 source.type = light->type;
                 source.light = light;
                 lightSources.push_back(source);

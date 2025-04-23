@@ -1,0 +1,108 @@
+{
+  "start-scene": "menu",
+  "window": {
+    "title": "Default Game Window",
+    "size": {
+      "width": 1280,
+      "height": 720
+    },
+    "fullscreen": false
+  },
+  "scene": {
+    "renderer": {
+      "sky": "assets/textures/sky.jpg",
+      "postprocess": "assets/shaders/postprocess/vignette.frag"
+    },
+    "assets": {
+      "shaders": {
+        "lit-textured": {
+          "vs": "assets/shaders/lit-textured.vert",
+          "fs": "assets/shaders/lit-textured.frag"
+        }
+      },
+      "textures": {
+        "albedo": "assets/textures/wood.jpg",
+        "specular": "assets/textures/moon.jpg"
+      },
+      "samplers": {
+        "default": {},
+        "pixelated": {
+          "MAG_FILTER": "GL_NEAREST"
+        }
+      },
+      "materials": {
+        "metal": {
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "depthTesting": {
+              "enabled": true
+            }
+          },
+          "type": "lit",
+          "shader": "lit-textured",
+          "sampler": "default",
+          "albedo": "albedo",
+          "specular": "specular",
+          "shininess": 32.0
+        }
+      },
+      "meshes": {
+        "cube": "assets/models/cube.obj"
+      }
+    },
+    "world": [
+      {
+        "position": [0, 0, 10],
+        "components": [
+          {
+            "type": "Camera"
+          },
+          {
+            "type": "Free Camera Controller"
+          }
+        ],
+        "children": [
+          {
+            "position": [1, -1, -1],
+            "rotation": [45, 45, 0],
+            "scale": [0.1, 0.1, 1.0],
+            "components": [
+              {
+                "type": "Mesh Renderer",
+                "mesh": "cube",
+                "material": "metal"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "position": [0, 1, 2],
+        "rotation": [0, 0, 0],
+        "scale": [2, 2, 2],
+        "components": [
+          {
+            "type": "Mesh Renderer",
+            "mesh": "plane",
+            "material": "metal"
+          }
+        ]
+      },
+      {
+        "name": "Directional Light",
+        "components": [
+          {
+            "type": "Light Component",
+            "lightType": "Directional",
+            "direction": [0, -1, -1],
+            "ambient": [0.1, 0.1, 0.1],
+            "diffuse": [0.8, 0.8, 0.8],
+            "specular": [1.0, 1.0, 1.0]
+          }
+        ]
+      }
+    ]
+  }
+}

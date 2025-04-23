@@ -19,10 +19,9 @@ namespace our
     // This component represents a light source in the scene.
     class LightComponent : public Component
     {
-    private:
+    public:
         Type type;
         glm::vec3 ambient, specular, diffuse; // The color of the light
-        glm::vec3 direction;                  // The direction of the light (for directional and spot lights)
         float cutOff;                         // spot cutoff angle in degrees
         float outerCutOff;                    // spot outer cutoff angle in degrees
 
@@ -30,7 +29,6 @@ namespace our
         float attenuationLinear;    // The linear of the attenuation
         float attenuationQuadratic; // The quadratic of the attenuation
 
-    public:
         // The ID of this component type is "Light Component"
         static std::string getID() { return "Light Component"; }
 

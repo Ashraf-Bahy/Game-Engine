@@ -8,7 +8,7 @@ namespace our::light_utils
     /*
         take shader of lit material and set all lights parameters to shader
     */
-    void setLightParameters(ShaderProgram *shader, std::vector<LightComponent> lights)
+    void setLightParameters(ShaderProgram *shader, std::vector<LightSource> lights)
     {
         shader->set("num_lights", (int)lights.size());
 
@@ -19,7 +19,7 @@ namespace our::light_utils
 
             shader->set("lights[" + std::to_string(i) + "].position", lights[i].position);
             shader->set("lights[" + std::to_string(i) + "].direction", lights[i].direction);
-            shader->set("lights[" + std::to_string(i) + "].type", lights[i].type);
+            shader->set("lights[" + std::to_string(i) + "].type", (int)lights[i].type);
             shader->set("lights[" + std::to_string(i) + "].ambient", light->ambient);
             shader->set("lights[" + std::to_string(i) + "].diffuse", light->diffuse);
             shader->set("lights[" + std::to_string(i) + "].specular", light->specular);

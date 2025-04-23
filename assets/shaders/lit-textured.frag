@@ -49,7 +49,7 @@ uniform Light lights[MAX_LIGHTS];
 
 
 // functions
-vec3 CalcDirLight(Light light, vec3 normal, vec3 viewDir) {
+vec3 calcDirLight(Light light, vec3 normal, vec3 viewDir) {
     vec3 lightDir = normalize(-light.direction);
 
     // diffuse shading
@@ -66,7 +66,7 @@ vec3 CalcDirLight(Light light, vec3 normal, vec3 viewDir) {
     return (ambient + diffuse + specular);
 } 
 
-vec3 calcPointLight(light light, vec3 normal, vec3 fragPos, vec3 viewDir) {
+vec3 calcPointLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir) {
     vec3 lightDir = normalize(light.position - fragPos);
 
     // diffuse shadding
@@ -91,7 +91,7 @@ vec3 calcPointLight(light light, vec3 normal, vec3 fragPos, vec3 viewDir) {
     return  (ambient + diffuse + specular);
 }
 
-vec3 calcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir) {
+vec3 calcSpotLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir) {
     vec3 lightDir = normalize(light.position - fragPos);
 
     // diffuse shadding
@@ -128,19 +128,19 @@ vec3 calcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir) {
 void main(){
     // properties
     vec3 norm = normalize(fs_in.frag_normal);
-    vec3 viewDir = normalize(view_position - fs_in.frag_position);
+    vec3 viewDir = normalize(fs_in.view_position - fs_in.frag_position);
     
     // calculations
     vec3 result = vec3(0.0);
     for(int i = 0; i < num_lights; i++)
     {
         if (lights[i].type == DIRECTIONAL_LIGHT)
-            result += CalcDirLight(lights[i], norm, viewDir); 
+            result += calcDirLight(lights[i], norm, viewDir); 
         else if (lights[i].type == POINT_LIGHT) 
-            result += CalcPointLight(lights[i], norm, fs_in.frag_position, viewDir);
+            result += calcPointLight(lights[i], norm, fs_in.frag_position, viewDir);
         else if (lights[i].type == SPOT_LIGHT)
-            result += CalcSpotLight(lights[i], norm, fs_in.frag_position, viewDir);
+            result += calcSpotLight(lights[i], norm, fs_in.frag_position, viewDir);
     }
 
-    FragColor = vec4(result, 1.0);
+    frag_color = vec4(result, 1.0);
 }

@@ -1,6 +1,6 @@
 #include "light.hpp"
 #include <glm/glm.hpp>
-#include <nlohmann/json.hpp>
+#include "../deserialize-utils.hpp"
 
 namespace our
 {
