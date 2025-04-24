@@ -62,8 +62,8 @@ vec3 calcDirLight(Light light, vec3 normal, vec3 viewDir) {
     // combine results
     vec3 ambient  = light.ambient  * texture(material.albedo, fs_in.tex_coord).rgb;
     vec3 diffuse  = light.diffuse  * diff * texture(material.albedo, fs_in.tex_coord).rgb;
-    vec3 specular = light.specular * spec * vec3(texture(material.specular, fs_in.tex_coord));
-    return (ambient + diffuse);
+    vec3 specular = light.specular * spec * texture(material.specular, fs_in.tex_coord).rgb; 
+    return (ambient + diffuse + specular);
 } 
 
 vec3 calcPointLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir) {

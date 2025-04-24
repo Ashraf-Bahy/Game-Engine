@@ -92,6 +92,8 @@ namespace our
         glBindTexture(GL_TEXTURE_2D, specular->getOpenGLName());
         glBindSampler(1, sampler->getOpenGLName());
         shader->set("material.specular", 1);
+
+        shader->set("material.shininess", shininess);
     }
 
     void LitMaterial::deserialize(const nlohmann::json &data)
