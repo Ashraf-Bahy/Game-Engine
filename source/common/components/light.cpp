@@ -10,7 +10,7 @@ namespace our
             return;
 
         // Deserialize the type of the light
-        std::string typeStr = data.value("type", "Directional");
+        std::string typeStr = data.value("lightType", "Directional");
         if (typeStr == "Directional")
         {
             type = Type::Directional;
