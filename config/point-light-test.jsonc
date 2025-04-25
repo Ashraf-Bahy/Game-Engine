@@ -309,25 +309,23 @@
       //   ]
       // }
       {
-        "name": "Spot Light",
-        "position": [5, 5, 5],
+        "name": "Point Light",
+        "position": [-50, 5, 5],
         "components": [
           {
             "type": "Light Component",
-            "lightType": "Spot",
+            "lightType": "Point",
             "direction": [-1, -1, -1],
             "ambient": [0.2, 0.2, 0.2],
             "diffuse": [0.8, 0.8, 0.8],
             "specular": [0.5, 0.5, 0.5],
-            "cutOff": 50.5,
-            "outerCutOff": 53.5,
             "attenuationConstant": 1.0,
             "attenuationLinear": 0.045,
             "attenuationQuadratic": 0.0075
           },
           {
             "type": "Movement",
-            "angularVelocity": [0, 70, 0]
+            "linearVelocity": [3, 0, 0]
           }
         ]
       }

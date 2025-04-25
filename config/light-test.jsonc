@@ -34,13 +34,19 @@
         "wood": "assets/textures/wood.jpg",
         "glass": "assets/textures/glass-panels.png",
         "monkey": "assets/textures/monkey.png",
-        "specular": "assets/textures/specular2.jpg"
+        "specular": "assets/textures/specular2.jpg",
+        "robotDiffuse": "assets/textures/robot/diffuse.jpeg",
+        "robotSpecular": "assets/textures/robot/specular.png",
+        "helmetDiffuse": "assets/textures/helmet/albedo.jpg",
+        "helmetSpecular": "assets/textures/helmet/metallic.jpg"
       },
       "meshes": {
         "cube": "assets/models/cube.obj",
         "monkey": "assets/models/monkey.obj",
         "plane": "assets/models/plane.obj",
-        "sphere": "assets/models/sphere.obj"
+        "sphere": "assets/models/sphere.obj",
+        "robot": "assets/models/robot/robot.gltf",
+        "helmet": "assets/models/helmet/DamagedHelmet.gltf"
       },
       "samplers": {
         "default": {},
@@ -128,6 +134,38 @@
           "specular": "specular",
           "shininess": 100,
           "sampler": "default"
+        },
+        "robot": {
+          "type": "lit",
+          "shader": "lit",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "depthTesting": {
+              "enabled": true
+            }
+          },
+          "albedo": "robotDiffuse",
+          "specular": "robotSpecular",
+          "shininess": 100,
+          "sampler": "default"
+        },
+        "helmet": {
+          "type": "lit",
+          "shader": "lit",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "depthTesting": {
+              "enabled": true
+            }
+          },
+          "albedo": "helmetDiffuse",
+          "specular": "helmetSpecular",
+          "shininess": 100,
+          "sampler": "default"
         }
       }
     },
@@ -194,6 +232,30 @@
             "type": "Mesh Renderer",
             "mesh": "cube",
             "material": "glass"
+          }
+        ]
+      },
+      {
+        "position": [6, 0, -4],
+        "rotation": [90, 0, 0],
+        "scale": [1, 1, 1],
+        "components": [
+          {
+            "type": "Mesh Renderer",
+            "mesh": "helmet",
+            "material": "helmet"
+          }
+        ]
+      },
+      {
+        "position": [-6, 0, -4],
+        "rotation": [0, 0, 0],
+        "scale": [0.1, 0.1, 0.1],
+        "components": [
+          {
+            "type": "Mesh Renderer",
+            "mesh": "robot",
+            "material": "robot"
           }
         ]
       },

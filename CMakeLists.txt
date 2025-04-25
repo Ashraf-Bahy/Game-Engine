@@ -37,8 +37,10 @@ set(IMGUI_SOURCES
         vendor/imgui/imgui_impl/imgui_impl_opengl3.cpp
 )
 
+set(TINYGLTF_SOURCE vendor/tinygltf/tiny_gltf.cc)
+
 # Combine all vendor source files together into a single variable
-set(VENDOR_SOURCES ${GLAD_SOURCE} ${IMGUI_SOURCES})
+set(VENDOR_SOURCES ${GLAD_SOURCE} ${IMGUI_SOURCES} ${TINYGLTF_SOURCE})
 
 # A variable with all our source files that are common between executable targets (examples)
 set(COMMON_SOURCES
@@ -110,6 +112,7 @@ include_directories(
         vendor/imgui
         vendor/utils
         vendor/bullet3/src
+        vendor/tinygltf
 )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
