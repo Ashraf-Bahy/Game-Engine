@@ -38,7 +38,9 @@
         "robotDiffuse": "assets/textures/robot/diffuse.jpeg",
         "robotSpecular": "assets/textures/robot/specular.png",
         "helmetDiffuse": "assets/textures/helmet/albedo.jpg",
-        "helmetSpecular": "assets/textures/helmet/metallic.jpg"
+        "helmetSpecular": "assets/textures/helmet/metallic.jpg",
+        "nightStalkerDiffuse": "assets/textures/night_stalker/Legs_and_Body_baseColor.png",
+        "nightStalkerSpecular": "assets/textures/night_stalker/Legs_and_Body_metallicRoughness.png"
       },
       "meshes": {
         "cube": "assets/models/cube.obj",
@@ -46,7 +48,8 @@
         "plane": "assets/models/plane.obj",
         "sphere": "assets/models/sphere.obj",
         "robot": "assets/models/robot/robot.gltf",
-        "helmet": "assets/models/helmet/DamagedHelmet.gltf"
+        "helmet": "assets/models/helmet/DamagedHelmet.gltf",
+        "nightStalker": "assets/models/night_stalker/scene.gltf"
       },
       "samplers": {
         "default": {},
@@ -164,6 +167,22 @@
           },
           "albedo": "helmetDiffuse",
           "specular": "helmetSpecular",
+          "shininess": 1000,
+          "sampler": "default"
+        },
+        "nightStalker": {
+          "type": "lit",
+          "shader": "lit",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "depthTesting": {
+              "enabled": true
+            }
+          },
+          "albedo": "nightStalkerDiffuse",
+          "specular": "nightStalkerSpecular",
           "shininess": 100,
           "sampler": "default"
         }
@@ -256,6 +275,18 @@
             "type": "Mesh Renderer",
             "mesh": "robot",
             "material": "robot"
+          }
+        ]
+      },
+      {
+        "position": [-6, 0, -2],
+        "rotation": [0, 0, 0],
+        "scale": [1, 1, 1],
+        "components": [
+          {
+            "type": "Mesh Renderer",
+            "mesh": "nightStalker",
+            "material": "nightStalker"
           }
         ]
       },
