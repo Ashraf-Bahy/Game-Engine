@@ -45,16 +45,16 @@ namespace our
         playerGhost->setWorldTransform(startTransform); // Apply position
 
         // 3. Create the kinematic character controller
-        btKinematicCharacterController *character = new btKinematicCharacterController(
+        characterController = new btKinematicCharacterController(
             playerGhost, (btConvexShape *)capsule, 0.35f /*step height*/, btVector3(0, 1, 0));
-        character->setGravity(btVector3(0, -9.81f, 0)); // Set gravity for the character controller
+        characterController->setGravity(btVector3(0, -9.81f, 0)); // Set gravity for the character controller
 
         // 4. Add to the world
         dynamicsWorld->addCollisionObject(playerGhost,
                                           btBroadphaseProxy::CharacterFilter,
                                           btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter);
-        dynamicsWorld->addAction(character);          // Important!
-        dynamicsWorld->updateSingleAabb(playerGhost); // Update AABB for the ghost object
+        dynamicsWorld->addAction(characterController); // Important!
+        dynamicsWorld->updateSingleAabb(playerGhost);  // Update AABB for the ghost object
 
         // Create rigid bodies for entities with a MeshRendererComponent
         for (auto &entity : world->getEntities())
@@ -188,16 +188,50 @@ namespace our
     // transform the player to the new position
     unsigned int PhysicsSystem::moveCharacter(World *world, float deltaTime)
     {
-        // dynamicsWorld->stepSimulation(deltaTime, 7);
+        Entity *player = world->getEntity("player");
 
-        Entity *camera = world->getEntity("player");
-        btTransform camerTransform = physics_utils::getEntityWorldTransform(camera);
+        // Sync rotation (yaw only) to Bullet
+        float yaw = player->localTransform.rotation.y;
+        btTransform ghostTransform = playerGhost->getWorldTransform();
+        ghostTransform.setRotation(btQuaternion(btVector3(0, 1, 0), yaw)); // Y-axis rotation
+        playerGhost->setWorldTransform(ghostTransform);
 
-        playerGhost->setWorldTransform(camerTransform);
-        // collisionCallback.collided_id = 0;
-        // dynamicsWorld->contactTest(ghost, collisionCallback);
-        // return collisionCallback.collided_id;
+        // Step the simulation
+        dynamicsWorld->stepSimulation(deltaTime, 7);
+
+        // Sync ECS position from Bullet
+        btTransform newTransform = playerGhost->getWorldTransform();
+        btVector3 newPos = newTransform.getOrigin();
+        player->localTransform.position = glm::vec3(newPos.x(), newPos.y(), newPos.z());
+
         return 0;
+    }
+    void PhysicsSystem::updateCharacterMovement(World *world, FreeCameraControllerSystem &controllerSystem, float deltaTime)
+    {
+        if (controllerSystem.hasMovementUpdate())
+        {
+            // Convert displacement to Bullet's coordinate system
+            glm::vec3 displacement = controllerSystem.getPendingDisplacement();
+            characterController->setWalkDirection(btVector3(
+                displacement.x,
+                displacement.y,
+                displacement.z));
+            controllerSystem.resetMovement();
+        }
+
+        // Step simulation
+        dynamicsWorld->stepSimulation(deltaTime);
+
+        // Update ECS position from Bullet
+        btTransform transform;
+        transform = characterController->getGhostObject()->getWorldTransform();
+        btVector3 origin = transform.getOrigin();
+
+        Entity *character = world->getEntity("player");
+        character->localTransform.position = glm::vec3(
+            origin.x(),
+            origin.y(),
+            origin.z());
     }
 
     void PhysicsSystem::syncTransforms(Entity *entity, Transform *transform)
@@ -271,7 +305,7 @@ namespace our
             dynamicsWorld->stepSimulation(deltaTime);
             processEntities(world);
             dynamicsWorld->updateSingleAabb(playerGhost); // Update AABB for the ghost object
-            moveCharacter(world, deltaTime);
+            // moveCharacter(world, deltaTime);
         }
         else
         {
@@ -296,28 +330,4 @@ namespace our
         delete debugDrawer;
     }
 
-    bool PhysicsSystem::checkCollision(const glm::vec3 &box1_min, const glm::vec3 &box1_max,
-                                       const glm::vec3 &box2_min, const glm::vec3 &box2_max)
-    {
-        // Check along x-axis
-        if (box1_max.x < box2_min.x || box2_max.x < box1_min.x)
-        {
-            return false;
-        }
-
-        // Check along y-axis
-        if (box1_max.y < box2_min.y || box2_max.y < box1_min.y)
-        {
-            return false;
-        }
-
-        // Check along z-axis
-        if (box1_max.z < box2_min.z || box2_max.z < box1_min.z)
-        {
-            return false;
-        }
-
-        // The two boxes are colliding
-        return true;
-    }
 }

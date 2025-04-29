@@ -53,6 +53,7 @@ class Playstate : public our::State
         auto &keyboard = getApp()->getKeyboard();
 
         physicsSystem.update(&world, (float)deltaTime);
+        physicsSystem.updateCharacterMovement(&world, cameraController, (float)deltaTime);
         physicsSystem.debugDrawWorld(&world);
 
         if (keyboard.justPressed(GLFW_KEY_ESCAPE))

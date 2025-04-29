@@ -7,6 +7,7 @@
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <unordered_map>
 #include <LinearMath/btIDebugDraw.h>
+#include <BulletDynamics/Character/btKinematicCharacterController.h>
 
 namespace our
 {
@@ -118,14 +119,13 @@ namespace our
         std::unordered_map<unsigned int, btRigidBody *> rigidBodies;
         // the main player
         btPairCachingGhostObject *playerGhost;
+        btKinematicCharacterController *characterController;
         GLDebugDrawer *debugDrawer = nullptr;
 
     public:
         void initialize(World *world, glm::ivec2 windowSize);
         void update(World *world, float deltaTime);
         void destroy();
-        bool checkCollision(const glm::vec3 &box1_min, const glm::vec3 &box1_max,
-                            const glm::vec3 &box2_min, const glm::vec3 &box2_max);
 
         // Sync the transforms of the entity and its collision component
         void syncTransforms(Entity *entity, Transform *transform);
@@ -137,6 +137,8 @@ namespace our
         void debugDrawWorld(World *world);
 
         unsigned int moveCharacter(World *world, float deltaTime); // return mesh id that person collided with
+
+        void updateCharacterMovement(World *world, FreeCameraControllerSystem &controllerSystem, float deltaTime);
     };
 
 }
