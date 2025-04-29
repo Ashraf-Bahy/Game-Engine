@@ -69,11 +69,6 @@ namespace our
                 const bool USE_QUANTIZED_AABB_COMPRESSION = true;
                 meshComponent->shape = new btBvhTriangleMeshShape(meshComponent->triangleMesh, USE_QUANTIZED_AABB_COMPRESSION);
 
-                // meshComponent->shape->setLocalScaling(btVector3( this function is a disease as it changes in the original data
-                //     entity->localTransform.scale.x,
-                //     entity->localTransform.scale.y,
-                //     entity->localTransform.scale.z));
-
                 btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(
                     0, // Mass (0 = static object)
                     physics_utils::prepareMotionStateEntity(entity),
@@ -186,6 +181,8 @@ namespace our
     }
 
     // transform the player to the new position
+    // redundant as we replaced controlling the pyshics from the ECS with fr the character
+    // fully controlling the ECS from the physics system (as it is more easy for handling collisions)
     unsigned int PhysicsSystem::moveCharacter(World *world, float deltaTime)
     {
         Entity *player = world->getEntity("player");
