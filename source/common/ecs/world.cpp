@@ -1,5 +1,7 @@
 #include "world.hpp"
 
+unsigned int our::World::ID;
+
 namespace our
 {
 
@@ -8,6 +10,7 @@ namespace our
     // If any of the entities has children, this function will be called recursively for these children
     void World::deserialize(const nlohmann::json &data, Entity *parent)
     {
+        World::ID = 0;
         if (!data.is_array())
             return;
         for (const auto &entityData : data)
@@ -22,7 +25,17 @@ namespace our
                 //  and the current entity as the parent
                 deserialize(entityData["children"], entity);
             }
+
+            if (!entity->name.empty())
+            {
+                entityByName[entity->name] = entity;
+            }
         }
+    }
+
+    Entity *World::getEntity(const std::string &entityName)
+    {
+        return entityByName[entityName];
     }
 
 }

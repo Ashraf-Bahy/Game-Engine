@@ -10,10 +10,12 @@ namespace our
     class World
     {
         std::unordered_set<Entity *> entities;         // These are the entities held by this world
-        std::unordered_set<Entity *> markedForRemoval; // These are the entities that are awaiting to be deleted
-                                                       // when deleteMarkedEntities is called
+        std::unordered_set<Entity *> markedForRemoval; // These are the entities that are awaiting to be deleted when deleteMarkedEntities is called
+        std::unordered_map<std::string, Entity *> entityByName;
+
     public:
         World() = default;
+        static unsigned int ID;
 
         // This will deserialize a json array of entities and add the new entities to the current world
         // If parent pointer is not null, the new entities will be have their parent set to that given pointer
@@ -31,6 +33,7 @@ namespace our
             Entity *entity = new Entity();
             entity->world = this;
             entities.insert(entity);
+            entity->id = ++ID;
             return entity;
         }
 
@@ -73,7 +76,10 @@ namespace our
                 delete entity;
             }
             entities.clear();
+            entityByName.clear();
         }
+
+        Entity *getEntity(const std::string &entityName);
 
         // Since the world owns all of its entities, they should be deleted alongside it.
         ~World()
