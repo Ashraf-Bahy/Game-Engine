@@ -5,6 +5,11 @@
 #include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
 #include <BulletCollision/CollisionShapes/btShapeHull.h>
 #include "../ecs/transform.hpp"
+#include <BulletDynamics/Character/btKinematicCharacterController.h>
+
+#include <BulletCollision/CollisionShapes/btShapeHull.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <BulletDynamics/Character/btKinematicCharacterController.h>
 
 namespace our
 {
@@ -15,17 +20,41 @@ namespace our
         broadphase = new btDbvtBroadphase();
         collisionConfiguration = new btDefaultCollisionConfiguration();
         dispatcher = new btCollisionDispatcher(collisionConfiguration);
+
         solver = new btSequentialImpulseConstraintSolver();
         dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
         dynamicsWorld->setGravity(btVector3(0, -9.81f, 0));
 
-        // ghost body (act as the main player)
-        // playerGhost = new btGhostObject();
-        // playerGhost->setCollisionShape(new btSphereShape(1.0f));
-        // playerGhost->setUserPointer((void *)0);
-        // map_ids[0] = "GHOST";
+        // to make the character collide with the static objects
+        dynamicsWorld->getBroadphase()->getOverlappingPairCache()->setInternalGhostPairCallback(
+            new btGhostPairCallback());
 
-        // dynamicsWorld->addCollisionObject(playerGhost);
+        // 1. Create a collision shape (e.g., capsule)
+        btCollisionShape *capsule = new btCapsuleShapeZ(0.5f, 2.0f);
+
+        // 2. Create a ghost object
+        playerGhost = new btPairCachingGhostObject();
+        playerGhost = playerGhost; // Store the player ghost object for later use
+        playerGhost->setCollisionShape(capsule);
+        playerGhost->setCollisionFlags(btCollisionObject::CF_CHARACTER_OBJECT);
+
+        btTransform startTransform;
+        startTransform.setIdentity();
+        // startTransform.setOrigin(btVector3(0, 30, 0)); // Spawn at (x=0, y=10, z=0)
+
+        playerGhost->setWorldTransform(startTransform); // Apply position
+
+        // 3. Create the kinematic character controller
+        btKinematicCharacterController *character = new btKinematicCharacterController(
+            playerGhost, (btConvexShape *)capsule, 0.35f /*step height*/, btVector3(0, 1, 0));
+        character->setGravity(btVector3(0, -9.81f, 0)); // Set gravity for the character controller
+
+        // 4. Add to the world
+        dynamicsWorld->addCollisionObject(playerGhost,
+                                          btBroadphaseProxy::CharacterFilter,
+                                          btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter);
+        dynamicsWorld->addAction(character);          // Important!
+        dynamicsWorld->updateSingleAabb(playerGhost); // Update AABB for the ghost object
 
         // Create rigid bodies for entities with a MeshRendererComponent
         for (auto &entity : world->getEntities())
@@ -33,16 +62,14 @@ namespace our
             MeshRendererComponent *meshComponent = entity->getComponent<MeshRendererComponent>();
             if (!meshComponent)
                 continue;
-            // create the shape
-            // NOTE: we must track this pointer and delete it when all btCollisionObjects that use it are done with it!
 
             // for the rigiid bodies of the system that will not move
-            if (!meshComponent->moving)
+            if (!meshComponent->dynamic)
             {
                 const bool USE_QUANTIZED_AABB_COMPRESSION = true;
                 meshComponent->shape = new btBvhTriangleMeshShape(meshComponent->triangleMesh, USE_QUANTIZED_AABB_COMPRESSION);
 
-                // meshComponent->shape->setLocalScaling(btVector3(
+                // meshComponent->shape->setLocalScaling(btVector3( this function is a disease as it changes in the original data
                 //     entity->localTransform.scale.x,
                 //     entity->localTransform.scale.y,
                 //     entity->localTransform.scale.z));
@@ -54,11 +81,13 @@ namespace our
 
                 btRigidBody *rigidBody = new btRigidBody(rigidBodyCI);
                 rigidBody->setUserPointer(entity);
-                dynamicsWorld->addRigidBody(rigidBody);
+                rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
+
+                dynamicsWorld->addRigidBody(rigidBody, btBroadphaseProxy::StaticFilter, btBroadphaseProxy::AllFilter);
                 rigidBodies[entity->id] = rigidBody;
                 meshComponent->bulletBody = rigidBody; // Store the rigid body in the component for later use
             }
-            else // this object will move
+            else // this object will move (dynamic) like demons
             {
                 // Get the mesh data from the component
                 btTriangleIndexVertexArray *meshData = meshComponent->mesh->data;
@@ -156,12 +185,27 @@ namespace our
         }
     }
 
+    // transform the player to the new position
+    unsigned int PhysicsSystem::moveCharacter(World *world, float deltaTime)
+    {
+        // dynamicsWorld->stepSimulation(deltaTime, 7);
+
+        Entity *camera = world->getEntity("player");
+        btTransform camerTransform = physics_utils::getEntityWorldTransform(camera);
+
+        playerGhost->setWorldTransform(camerTransform);
+        // collisionCallback.collided_id = 0;
+        // dynamicsWorld->contactTest(ghost, collisionCallback);
+        // return collisionCallback.collided_id;
+        return 0;
+    }
+
     void PhysicsSystem::syncTransforms(Entity *entity, Transform *transform)
     {
 
         MeshRendererComponent *meshComponent = entity->getComponent<MeshRendererComponent>();
 
-        if (meshComponent && (meshComponent->name == "monkey" || meshComponent->name == "sphere"))
+        if (meshComponent && meshComponent->dynamic)
         {
             // Update ECS from physics
             btTransform trans;
@@ -179,6 +223,10 @@ namespace our
                 rotation.z());
             // Convert quaternion to Euler angles (pitch, yaw, roll)
             transform->rotation = glm::eulerAngles(quat);
+        }
+        else if (meshComponent && (meshComponent->name == "cube"))
+        {
+            // Update physics from ECS
         }
     }
 
@@ -222,6 +270,8 @@ namespace our
         {
             dynamicsWorld->stepSimulation(deltaTime);
             processEntities(world);
+            dynamicsWorld->updateSingleAabb(playerGhost); // Update AABB for the ghost object
+            moveCharacter(world, deltaTime);
         }
         else
         {

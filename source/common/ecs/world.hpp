@@ -10,8 +10,9 @@ namespace our
     class World
     {
         std::unordered_set<Entity *> entities;         // These are the entities held by this world
-        std::unordered_set<Entity *> markedForRemoval; // These are the entities that are awaiting to be deleted
-                                                       // when deleteMarkedEntities is called
+        std::unordered_set<Entity *> markedForRemoval; // These are the entities that are awaiting to be deleted when deleteMarkedEntities is called
+        std::unordered_map<std::string, Entity *> entityByName;
+
     public:
         World() = default;
         static unsigned int ID;
@@ -75,7 +76,10 @@ namespace our
                 delete entity;
             }
             entities.clear();
+            entityByName.clear();
         }
+
+        Entity *getEntity(const std::string &entityName);
 
         // Since the world owns all of its entities, they should be deleted alongside it.
         ~World()

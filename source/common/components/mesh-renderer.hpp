@@ -16,7 +16,7 @@ namespace our
         Mesh *mesh;         // The mesh that should be drawn
         Material *material; // The material used to draw the mesh
         std::string name = "";
-        bool moving = false;
+        bool dynamic = false;
         btRigidBody *bulletBody = nullptr;
         btBvhTriangleMeshShape *shape = nullptr;
         btTriangleIndexVertexArray *shapeData = nullptr;

@@ -25,7 +25,17 @@ namespace our
                 //  and the current entity as the parent
                 deserialize(entityData["children"], entity);
             }
+
+            if (!entity->name.empty())
+            {
+                entityByName[entity->name] = entity;
+            }
         }
+    }
+
+    Entity *World::getEntity(const std::string &entityName)
+    {
+        return entityByName[entityName];
     }
 
 }

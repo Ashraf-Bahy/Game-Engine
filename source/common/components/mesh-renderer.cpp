@@ -20,9 +20,9 @@ namespace our
         mesh = AssetLoader<Mesh>::get(data["mesh"].get<std::string>());
         material = AssetLoader<Material>::get(data["material"].get<std::string>());
         name = data["mesh"].get<std::string>();
-        if (data.contains("moving"))
+        if (data.contains("dynamic"))
         {
-            moving = data["moving"].get<bool>();
+            dynamic = data["dynamic"].get<bool>();
         }
 
         // Build triangle mesh from vertices/indices

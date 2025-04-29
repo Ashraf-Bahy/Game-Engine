@@ -117,7 +117,7 @@ namespace our
 
         std::unordered_map<unsigned int, btRigidBody *> rigidBodies;
         // the main player
-        btCollisionObject *playerGhost;
+        btPairCachingGhostObject *playerGhost;
         GLDebugDrawer *debugDrawer = nullptr;
 
     public:
@@ -135,6 +135,8 @@ namespace our
 
         // Debug draw the world using the debug drawer
         void debugDrawWorld(World *world);
+
+        unsigned int moveCharacter(World *world, float deltaTime); // return mesh id that person collided with
     };
 
 }
