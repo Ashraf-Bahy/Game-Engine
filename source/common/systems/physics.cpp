@@ -180,7 +180,7 @@ namespace our
         }
     }
 
-    // transform the player to the new position
+    // transform the player to the new position (redundant function)
     // redundant as we replaced controlling the pyshics from the ECS with fr the character
     // fully controlling the ECS from the physics system (as it is more easy for handling collisions)
     unsigned int PhysicsSystem::moveCharacter(World *world, float deltaTime)
@@ -203,6 +203,7 @@ namespace our
 
         return 0;
     }
+
     void PhysicsSystem::updateCharacterMovement(World *world, FreeCameraControllerSystem &controllerSystem, float deltaTime)
     {
         if (controllerSystem.hasMovementUpdate())
