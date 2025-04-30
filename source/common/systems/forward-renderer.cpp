@@ -235,7 +235,8 @@ namespace our
         {
             command.material->setup();
             command.material->shader->set("transform", VP * command.localToWorld);
-            if (dynamic_cast<LitMaterial *>(command.material) != nullptr)
+            if (dynamic_cast<LitMaterial *>(command.material) != nullptr ||
+                dynamic_cast<AdvancedLitMaterial *>(command.material) != nullptr)
             {
                 light_utils::setLightParameters(command.material->shader, lightSources);
                 command.material->shader->set("model", command.localToWorld);

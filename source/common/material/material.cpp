@@ -107,4 +107,96 @@ namespace our
         specular = AssetLoader<Texture2D>::get(data.value("specular", ""));
         shininess = data.value("shininess", 32.0f);
     }
+
+    void AdvancedLitMaterial::setup() const
+    {
+        Material::setup();
+        shader->set("material.albedoMap", 0);
+        shader->set("material.normalMap", 1);
+        shader->set("material.roughnessMap", 2);
+        shader->set("material.aoMap", 3);
+        shader->set("material.metallicMap", 4);
+        shader->set("material.emissiveMap", 5);
+        shader->set("material.IOR", IOR);
+
+        glActiveTexture(GL_TEXTURE0);
+        albedoMap->bind();
+        sampler->bind(0);
+
+        if (normalMap)
+        {
+            shader->set("material.useNormalMap", true);
+            glActiveTexture(GL_TEXTURE1);
+            normalMap->bind();
+            sampler->bind(1);
+        }
+        else
+        {
+            shader->set("material.useNormalMap", false);
+        }
+
+        if (roughnessMap)
+        {
+            shader->set("material.useRoughnessMap", true);
+            glActiveTexture(GL_TEXTURE2);
+            roughnessMap->bind();
+            sampler->bind(2);
+        }
+        else
+        {
+            shader->set("material.useRoughnessMap", false);
+        }
+
+        if (aoMap)
+        {
+            shader->set("material.useAOMap", true);
+            glActiveTexture(GL_TEXTURE3);
+            aoMap->bind();
+            sampler->bind(3);
+        }
+        else
+        {
+            shader->set("material.useAOMap", false);
+        }
+
+        if (metallicMap)
+        {
+            shader->set("material.useMetallicMap", true);
+            glActiveTexture(GL_TEXTURE4);
+            metallicMap->bind();
+            sampler->bind(4);
+        }
+        else
+        {
+            shader->set("material.useMetallicMap", false);
+        }
+
+        if (emissiveMap)
+        {
+            shader->set("material.useEmissiveMap", true);
+            glActiveTexture(GL_TEXTURE5);
+            emissiveMap->bind();
+            sampler->bind(5);
+        }
+        else
+        {
+            shader->set("material.useEmissiveMap", false);
+        }
+    }
+
+    void AdvancedLitMaterial::deserialize(const nlohmann::json &data)
+    {
+        Material::deserialize(data);
+        if (!data.is_object())
+            return;
+        sampler = AssetLoader<Sampler>::get(data.value("sampler", ""));
+
+        albedoMap = AssetLoader<Texture2D>::get(data.value("albedoMap", ""));
+        normalMap = AssetLoader<Texture2D>::get(data.value("normalMap", ""));
+        roughnessMap = AssetLoader<Texture2D>::get(data.value("roughnessMap", ""));
+        aoMap = AssetLoader<Texture2D>::get(data.value("aoMap", ""));
+        metallicMap = AssetLoader<Texture2D>::get(data.value("metallicMap", ""));
+        emissiveMap = AssetLoader<Texture2D>::get(data.value("emissiveMap", ""));
+        IOR = data.value("IOR", 0.04);
+    }
 }

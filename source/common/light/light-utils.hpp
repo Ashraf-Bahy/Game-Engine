@@ -22,6 +22,7 @@ namespace our::light_utils
             shader->set("lights[" + std::to_string(i) + "].type", (int)lights[i].type);
             shader->set("lights[" + std::to_string(i) + "].ambient", light->ambient);
             shader->set("lights[" + std::to_string(i) + "].diffuse", light->diffuse);
+            shader->set("lights[" + std::to_string(i) + "].color", light->diffuse);
             shader->set("lights[" + std::to_string(i) + "].specular", light->specular);
             shader->set("lights[" + std::to_string(i) + "].outerCutOff", glm::cos(glm::radians(light->outerCutOff)));
             shader->set("lights[" + std::to_string(i) + "].cutOff", glm::cos(glm::radians(light->cutOff)));

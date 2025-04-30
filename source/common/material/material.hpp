@@ -67,6 +67,22 @@ namespace our
         void setup() const override;
         void deserialize(const nlohmann::json &data) override;
     };
+
+    class AdvancedLitMaterial : public Material
+    {
+    public:
+        Texture2D *albedoMap;    // Albedo texture [[10]]
+        Texture2D *roughnessMap; // Specular texture (added)
+        Texture2D *metallicMap;  // Specular texture (added)
+        Texture2D *aoMap;        // Specular texture (added)
+        Texture2D *emissiveMap;  // Specular texture (added)
+        Texture2D *normalMap;    // Normal texture (added)
+
+        Sampler *sampler;
+        float IOR = 0.04f; // Shininess for specular highlights [[4]]
+        void setup() const override;
+        void deserialize(const nlohmann::json &data) override;
+    };
     // This function returns a new material instance based on the given type
     inline Material *createMaterialFromType(const std::string &type)
     {
@@ -81,6 +97,10 @@ namespace our
         else if (type == "lit")
         {
             return new LitMaterial();
+        }
+        else if (type == "adv-lit")
+        {
+            return new AdvancedLitMaterial();
         }
         else
         {
