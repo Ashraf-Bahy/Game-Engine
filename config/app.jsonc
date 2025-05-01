@@ -29,7 +29,8 @@
         "grass": "assets/textures/grass_ground_d.jpg",
         "wood": "assets/textures/wood.jpg",
         "glass": "assets/textures/glass-panels.png",
-        "monkey": "assets/textures/monkey.png"
+        "monkey": "assets/textures/monkey.png",
+        "crosshair": "assets/textures/crosshair.png"
       },
       "meshes": {
         "cube": "assets/models/cube.obj",
@@ -123,6 +124,50 @@
           "tint": [1, 1, 1, 1],
           "texture": "moon",
           "sampler": "default"
+        },
+        "cursor": {
+          "type": "textured",
+          "shader": "textured",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "depthTesting": {
+              "enabled": true
+            },
+            "blending": {
+              "enabled": true,
+              "sourceFactor": "GL_SRC_ALPHA",
+              "destinationFactor": "GL_ONE_MINUS_SRC_ALPHA"
+            },
+            "depthMask": false
+          },
+          "transparent": true,
+          "tint": [1, 0, 0, 0.7], // Semi-transparent red
+          "texture": "glass", // Reuse your glass texture or create a new one
+          "sampler": "default"
+        },
+        "crosshair": {
+          "type": "textured",
+          "shader": "textured",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "blending": {
+              "enabled": true,
+              "sourceFactor": "GL_SRC_ALPHA",
+              "destinationFactor": "GL_ONE_MINUS_SRC_ALPHA"
+            },
+            "depthTesting": {
+              "enabled": false
+            },
+            "depthMask": false
+          },
+          "transparent": true,
+          "tint": [1, 1, 1, 1], // Full opacity (let texture alpha control transparency)
+          "texture": "crosshair",
+          "sampler": "default"
         }
       }
     },
@@ -140,7 +185,7 @@
         ],
         "children": [
           {
-            "position": [1, -1, -1],
+            "position": [0, -1, -1],
             "rotation": [45, 45, 0],
             "scale": [0.1, 0.1, 1.0],
             "components": [
@@ -150,10 +195,40 @@
                 "material": "metal"
               }
             ]
+          },
+          {
+            "name": "screen_crosshair",
+            "position": [0, 0, -0.5], // Slightly in front of camera
+            "scale": [0.02, 0.02, 0.02], // Small size
+            "components": [
+              {
+                "type": "Mesh Renderer",
+                "mesh": "plane", // Flat quad facing camera
+                "material": "crosshair",
+                "pipelineState": {
+                  "depthTesting": {
+                    "enabled": false // Always visible
+                  }
+                }
+              }
+            ]
           }
         ]
       },
       {
+        "name": "hit_cursor",
+        "position": [0, 0, -100], // Start off-screen
+        "scale": [0.2, 0.2, 0.2],
+        "components": [
+          {
+            "type": "Mesh Renderer",
+            "mesh": "sphere", // Or create a custom "crosshair.obj"
+            "material": "cursor"
+          }
+        ]
+      },
+      {
+        "name": "monkey",
         "rotation": [-45, 0, 0],
         "position": [7, 5, 0],
         "components": [

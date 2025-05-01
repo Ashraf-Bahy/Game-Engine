@@ -14,6 +14,13 @@
 namespace our
 {
 
+    class HitMarker
+    {
+    public:
+        Entity *entity;
+        float timer = 0.0f;
+    };
+
     void PhysicsSystem::initialize(World *world, glm::ivec2 windowSize)
     {
         // Initialize Bullet Physics components
@@ -294,7 +301,7 @@ namespace our
         debugDrawer->flushLines(world);
     }
 
-    void PhysicsSystem::update(World *world, float deltaTime)
+    void PhysicsSystem::update(World *world, float deltaTime, Application *app)
     {
         // Step the physics simulation
 
@@ -304,6 +311,7 @@ namespace our
             processEntities(world);
             dynamicsWorld->updateSingleAabb(playerGhost); // Update AABB for the ghost object
             // moveCharacter(world, deltaTime);
+            fireBullet(world, app, deltaTime);
         }
         else
         {
@@ -311,6 +319,115 @@ namespace our
         }
     }
 
+    bool PhysicsSystem::raycast(const glm::vec3 &start, const glm::vec3 &end,
+                                Entity *&hitEntity, glm::vec3 &hitPoint, glm::vec3 &hitNormal)
+    {
+        if (!dynamicsWorld)
+            return false;
+
+        btVector3 btStart(start.x, start.y, start.z);
+        btVector3 btEnd(end.x, end.y, end.z);
+
+        // Configure raycast query
+        btCollisionWorld::ClosestRayResultCallback rayCallback(btStart, btEnd);
+        dynamicsWorld->rayTest(btStart, btEnd, rayCallback);
+
+        if (rayCallback.hasHit())
+        {
+            hitPoint = glm::vec3(
+                rayCallback.m_hitPointWorld.x(),
+                rayCallback.m_hitPointWorld.y(),
+                rayCallback.m_hitPointWorld.z());
+            hitNormal = glm::vec3(
+                rayCallback.m_hitNormalWorld.x(),
+                rayCallback.m_hitNormalWorld.y(),
+                rayCallback.m_hitNormalWorld.z());
+
+            // Get the entity associated with the hit object
+            // auto *hitBody = btRigidBody::upcast(rayCallback.m_collisionObject);
+            // if (hitBody && hitBody->getUserPointer())
+            // {
+            //     Entity *hitEntity = static_cast<Entity *>(hitBody->getUserPointer());
+            //     return true;
+            // }
+
+            if (rayCallback.m_collisionObject->getUserPointer())
+            {
+                hitEntity = static_cast<Entity *>(rayCallback.m_collisionObject->getUserPointer());
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void PhysicsSystem::fireBullet(World *world, Application *app, float deltaTime)
+    {
+        // Apply cooldown
+        fireCooldown -= deltaTime;
+        if (fireCooldown > 0)
+            return;
+
+        // Check for 'B' key press
+        Entity *cursor = world->getEntity("hit_cursor");
+        if (!cursor)
+            return;
+
+        if (app->getKeyboard().isPressed(GLFW_KEY_B))
+        {
+            if (fireCooldown <= 0)
+            {
+
+                Entity *player = world->getEntity("player");
+                glm::vec3 start = player->localTransform.position;
+                glm::vec3 forward = player->localTransform.getFront();
+                glm::vec3 end = start + forward * 100.0f;
+
+                Entity *hitEntity = nullptr;
+                glm::vec3 hitPoint, hitNormal;
+
+                if (raycast(start, end, hitEntity, hitPoint, hitNormal))
+                {
+                    printf("entity name: %s\n", hitEntity->name.c_str());
+                    if (hitEntity->name == "monkey")
+                    {
+
+                        // Update cursor position and make it face the camera (billboard effect)
+                        auto cursorTransform = cursor->localTransform;
+                        cursorTransform.position = hitPoint + hitNormal * 0.01f;
+
+                        // Simple billboard effect (always face camera)
+                        glm::vec3 toCamera = glm::normalize(
+                            player->localTransform.position - cursorTransform.position);
+                        cursorTransform.rotation = glm::eulerAngles(
+                            glm::quatLookAt(toCamera, glm::vec3(0, 1, 0)));
+
+                        cursor->localTransform = cursorTransform;
+                        if (auto meshRenderer = hitEntity->getComponent<MeshRendererComponent>())
+                        {
+                            if (meshRenderer->bulletBody)
+                            {
+                                dynamicsWorld->removeRigidBody(meshRenderer->bulletBody);
+                                delete meshRenderer->bulletBody->getMotionState();
+                                delete meshRenderer->bulletBody;
+                                meshRenderer->bulletBody = nullptr;
+                            }
+                        }
+                        printf("Hit entity: sucecss\n");
+                        world->markForRemoval(hitEntity);
+                        printf("Hit entity: %s\n", hitEntity->name.c_str());
+                        world->deleteMarkedEntities();
+                    }
+                }
+                else
+                {
+                    // Hide cursor when not hitting anything
+                    cursor->localTransform.position = glm::vec3(0, 0, -100);
+                    printf("did not Hit entity: sucecss\n");
+                }
+            }
+            fireCooldown = FIRE_RATE;
+        }
+    }
     void PhysicsSystem::destroy()
     {
         // Clean up Bullet Physics resources
@@ -327,5 +444,4 @@ namespace our
         delete broadphase;
         delete debugDrawer;
     }
-
 }

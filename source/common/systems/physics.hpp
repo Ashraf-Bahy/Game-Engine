@@ -121,10 +121,13 @@ namespace our
         btPairCachingGhostObject *playerGhost;
         btKinematicCharacterController *characterController;
         GLDebugDrawer *debugDrawer = nullptr;
+        // std::vector<HitMarker> activeHitMarkers;
+        float fireCooldown = 0.0f;
+        const float FIRE_RATE = 0.5f; // Seconds between shots
 
     public:
         void initialize(World *world, glm::ivec2 windowSize);
-        void update(World *world, float deltaTime);
+        void update(World *world, float deltaTime, Application *app);
         void destroy();
 
         // Sync the transforms of the entity and its collision component
@@ -139,6 +142,11 @@ namespace our
         unsigned int moveCharacter(World *world, float deltaTime); // return mesh id that person collided with
 
         void updateCharacterMovement(World *world, FreeCameraControllerSystem &controllerSystem, float deltaTime);
+
+        bool raycast(const glm::vec3 &start, const glm::vec3 &end,
+                     Entity *&hitEntity, glm::vec3 &hitPoint, glm::vec3 &hitNormal);
+
+        void fireBullet(World *world, Application *app, float deltaTime);
     };
 
 }
