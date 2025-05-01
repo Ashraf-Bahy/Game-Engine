@@ -99,6 +99,10 @@ set(COMMON_SOURCES
         source/common/systems/free-camera-controller.hpp
         source/common/systems/movement.hpp
 
+        # new created files
+        source/common/physics/physics-utils.hpp
+        source/common/systems/physics.hpp
+        source/common/systems/physics.cpp
         source/common/light/light-utils.hpp
 
 )
