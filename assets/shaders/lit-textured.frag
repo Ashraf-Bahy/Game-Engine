@@ -40,9 +40,9 @@ struct Light {
     float cutOff;
     float outerCutOff;
 
-    float constant;
-    float linear;
-    float quadratic;
+    float attenuationConstant;
+    float attenuationLinear;
+    float attenuationQuadratic;
 };
 uniform Light lights[MAX_LIGHTS];
 
@@ -82,7 +82,7 @@ vec3 calcPointLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir) {
 
     // attenuation
     float distance    = length(light.position - fragPos);
-    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
+    float attenuation = 1.0 / (light.attenuationConstant + light.attenuationLinear * distance + light.attenuationQuadratic * (distance * distance));    
 
     ambient  *= attenuation;  
     diffuse   *= attenuation;
@@ -116,7 +116,7 @@ vec3 calcSpotLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir) {
 
     // attenuation
     float distance    = length(light.position - fragPos);
-    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
+    float attenuation = 1.0 / (light.attenuationConstant + light.attenuationLinear * distance + light.attenuationQuadratic * (distance * distance));    
 
     diffuse   *= attenuation;
     specular *= attenuation;   

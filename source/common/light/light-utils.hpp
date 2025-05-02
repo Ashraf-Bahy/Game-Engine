@@ -26,9 +26,9 @@ namespace our::light_utils
             shader->set("lights[" + std::to_string(i) + "].specular", light->specular);
             shader->set("lights[" + std::to_string(i) + "].outerCutOff", glm::cos(glm::radians(light->outerCutOff)));
             shader->set("lights[" + std::to_string(i) + "].cutOff", glm::cos(glm::radians(light->cutOff)));
-            shader->set("lights[" + std::to_string(i) + "].constant", light->attenuationConstant);
-            shader->set("lights[" + std::to_string(i) + "].linear", light->attenuationLinear);
-            shader->set("lights[" + std::to_string(i) + "].quadratic", light->attenuationQuadratic);
+            shader->set("lights[" + std::to_string(i) + "].attenuationConstant", light->attenuationConstant);
+            shader->set("lights[" + std::to_string(i) + "].attenuationLinear", light->attenuationLinear);
+            shader->set("lights[" + std::to_string(i) + "].attenuationQuadratic", light->attenuationQuadratic);
         }
     }
 }
