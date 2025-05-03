@@ -39,7 +39,22 @@
         "hangarAlbedo": "assets/textures/hangar/Base_baseColor.png",
         "hangarNormal": "assets/textures/hangar/Base_normal.png",
         "hangarEmissive": "assets/textures/hangar/Base_emissive.png",
-        "hangarMetallic": "assets/textures/hangar/Base_metallicRoughness.png"
+        "hangarMetallic": "assets/textures/hangar/Base_metallicRoughness.png",
+        "nightStalkerAlbedo": "assets/textures/night_stalker/Legs_and_Body_baseColor.png",
+        "nightStalkerNormal": "assets/textures/night_stalker/Legs_and_Body_normal.png",
+        "nightStalkerEmissive": "assets/textures/night_stalker/Legs_and_Body_emissive.png",
+        "nightStalkerRoughness": "assets/textures/night_stalker/Legs_and_Body_metallicRoughness.png",
+        "monsterAlbedo": "assets/textures/monster/default_baseColor.jpeg",
+        "monsterNormal": "assets/textures/monster/default_normal.jpeg",
+        "monsterEmissive": "assets/textures/monster/default_emissive.jpeg",
+        "monsterMetallic": "assets/textures/monster/default_metallicRoughness.png",
+        "rayGunAlbedo": "assets/textures/raygun/Material_001_baseColor.jpeg",
+        "rayGunNormal": "assets/textures/raygun/Material_001_normal.png",
+        "rayGunEmissive": "assets/textures/raygun/Material_001_emissive.jpeg",
+        "rayGunMetallic": "assets/textures/raygun/Material_001_metallicRoughness.png",
+        "flashAlbedo": "assets/textures/flash/Material_001_baseColor.jpeg",
+        "flashNormal": "assets/textures/flash/Material_001_normal.png",
+        "flashMetallic": "assets/textures/flash/Material_001_metallicRoughness.png"
       },
       "meshes": {
         "cube": "assets/models/cube.obj",
@@ -47,7 +62,11 @@
         "plane": "assets/models/plane.obj",
         "sphere": "assets/models/sphere.obj",
         "robot": "assets/models/robot/robot.gltf",
-        "hangar": "assets/models/hangar/scene.gltf"
+        "hangar": "assets/models/hangar/scene.gltf",
+        "rayGun": "assets/models/raygun/scene.gltf",
+        "nightStalker": "assets/models/night_stalker/scene.gltf",
+        "monster": "assets/models/monster/scene.gltf",
+        "flash": "assets/models/flash/scene.gltf"
       },
       "samplers": {
         "default": {},
@@ -211,6 +230,73 @@
           "tint": [1, 1, 1, 1], // Full opacity (let texture alpha control transparency)
           "texture": "crosshair",
           "sampler": "default"
+        },
+        "nightStalker": {
+          "type": "adv-lit",
+          "shader": "adv-lit",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "depthTesting": {
+              "enabled": true
+            }
+          },
+          "albedoMap": "nightStalkerAlbedo",
+          "normalMap": "nightStalkerNormal",
+          "emissiveMap": "nightStalkerEmissive",
+          "roughnessMap": "nightStalkerRoughness",
+          "sampler": "default"
+        },
+        "monster": {
+          "type": "adv-lit",
+          "shader": "adv-lit",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "depthTesting": {
+              "enabled": true
+            }
+          },
+          "albedoMap": "monsterAlbedo",
+          "normalMap": "monsterNormal",
+          "emissiveMap": "monsterEmissive",
+          "roughnessMap": "monsterMetallic",
+          "sampler": "default"
+        },
+        "rayGun": {
+          "type": "adv-lit",
+          "shader": "adv-lit",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "depthTesting": {
+              "enabled": true
+            }
+          },
+          "albedoMap": "rayGunAlbedo",
+          "normalMap": "rayGunNormal",
+          "emissiveMap": "rayGunEmissive",
+          "metallicMap": "rayGunMetallic",
+          "sampler": "default"
+        },
+        "flash": {
+          "type": "adv-lit",
+          "shader": "adv-lit",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "depthTesting": {
+              "enabled": true
+            }
+          },
+          "albedoMap": "flashAlbedo",
+          "normalMap": "flashNormal",
+          "metallicMap": "flashMetallic",
+          "sampler": "default"
         }
       }
     },
@@ -241,14 +327,47 @@
         ],
         "children": [
           {
-            "position": [0, -1, -1],
-            "rotation": [45, 45, 0],
-            "scale": [0.1, 0.1, 1.0],
+            "name": "Point Light",
+            "position": [0, 0, 0],
+            "components": [
+              {
+                "type": "Light Component",
+                "lightType": "Point",
+                "direction": [0, 0, -1],
+                "ambient": [0.2, 0.2, 0.2],
+                "diffuse": [0.7, 0.7, 0.7],
+                "specular": [0.9, 0.9, 0.9],
+                "cutOff": 27,
+                "outerCutOff": 40,
+                "attenuationConstant": 1.0,
+                "attenuationLinear": 0.35,
+                "attenuationQuadratic": 0.44
+              }
+            ]
+          },
+          {
+            "position": [1.2, 0.37, -1],
+            "rotation": [-90, 180, 0],
+            "scale": [0.6, 0.6, 0.7],
             "components": [
               {
                 "type": "Mesh Renderer",
-                "mesh": "cube",
-                "material": "metal"
+                "mesh": "rayGun",
+                "material": "rayGun"
+              }
+            ],
+            "children": [
+              {
+                "position": [0.5, -0.3, 0],
+                "rotation": [0, 0, 0],
+                "scale": [0.2, 0.3, 0.3],
+                "components": [
+                  {
+                    "type": "Mesh Renderer",
+                    "mesh": "flash",
+                    "material": "flash"
+                  }
+                ]
               }
             ]
           },
@@ -496,6 +615,32 @@
             "attenuationConstant": 1.0,
             "attenuationLinear": 0.045,
             "attenuationQuadratic": 0.0075
+          }
+        ]
+      },
+      {
+        "position": [-6, 0, -2],
+        "rotation": [0, 0, 0],
+        "scale": [1, 1, 1],
+        "components": [
+          {
+            "type": "Mesh Renderer",
+            "mesh": "nightStalker",
+            "material": "nightStalker"
+          }
+        ],
+        "children": [
+          {
+            "position": [0, 2.5, -0.5],
+            "rotation": [0, 180, 0],
+            "scale": [1, 1, 1],
+            "components": [
+              {
+                "type": "Mesh Renderer",
+                "mesh": "monster",
+                "material": "monster"
+              }
+            ]
           }
         ]
       }
