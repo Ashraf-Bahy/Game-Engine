@@ -37,8 +37,10 @@ set(IMGUI_SOURCES
         vendor/imgui/imgui_impl/imgui_impl_opengl3.cpp
 )
 
+set(TINYGLTF_SOURCE vendor/tinygltf/tiny_gltf.cc)
+
 # Combine all vendor source files together into a single variable
-set(VENDOR_SOURCES ${GLAD_SOURCE} ${IMGUI_SOURCES})
+set(VENDOR_SOURCES ${GLAD_SOURCE} ${IMGUI_SOURCES} ${TINYGLTF_SOURCE})
 
 # A variable with all our source files that are common between executable targets (examples)
 set(COMMON_SOURCES
@@ -82,6 +84,8 @@ set(COMMON_SOURCES
 
         source/common/components/camera.hpp
         source/common/components/camera.cpp
+        source/common/components/light.hpp
+        source/common/components/light.cpp
         source/common/components/mesh-renderer.hpp
         source/common/components/mesh-renderer.cpp
         source/common/components/free-camera-controller.hpp
@@ -99,6 +103,8 @@ set(COMMON_SOURCES
         source/common/physics/physics-utils.hpp
         source/common/systems/physics.hpp
         source/common/systems/physics.cpp
+        source/common/light/light-utils.hpp
+
 )
 
 # Define the directories in which to search for the included headers
@@ -110,6 +116,7 @@ include_directories(
         vendor/imgui
         vendor/utils
         vendor/bullet3/src
+        vendor/tinygltf
 )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)

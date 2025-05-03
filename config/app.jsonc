@@ -22,6 +22,10 @@
         "textured": {
           "vs": "assets/shaders/textured.vert",
           "fs": "assets/shaders/textured.frag"
+        },
+        "adv-lit": {
+          "vs": "assets/shaders/lit-textured.vert",
+          "fs": "assets/shaders/pbr.frag"
         }
       },
       "textures": {
@@ -30,13 +34,20 @@
         "wood": "assets/textures/wood.jpg",
         "glass": "assets/textures/glass-panels.png",
         "monkey": "assets/textures/monkey.png",
-        "crosshair": "assets/textures/crosshair.png"
+        "crosshair": "assets/textures/crosshair.png",
+        "robotAlbedo": "assets/textures/robot/diffuse.jpeg",
+        "hangarAlbedo": "assets/textures/hangar/Base_baseColor.png",
+        "hangarNormal": "assets/textures/hangar/Base_normal.png",
+        "hangarEmissive": "assets/textures/hangar/Base_emissive.png",
+        "hangarMetallic": "assets/textures/hangar/Base_metallicRoughness.png"
       },
       "meshes": {
         "cube": "assets/models/cube.obj",
         "monkey": "assets/models/monkey.obj",
         "plane": "assets/models/plane.obj",
-        "sphere": "assets/models/sphere.obj"
+        "sphere": "assets/models/sphere.obj",
+        "robot": "assets/models/robot/robot.gltf",
+        "hangar": "assets/models/hangar/scene.gltf"
       },
       "samplers": {
         "default": {},
@@ -125,6 +136,38 @@
           "texture": "moon",
           "sampler": "default"
         },
+        "robot": {
+          "type": "adv-lit",
+          "shader": "adv-lit",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "depthTesting": {
+              "enabled": true
+            }
+          },
+          "tint": [1, 1, 1, 1],
+          "albedoMap": "robotAlbedo",
+          "sampler": "default"
+        },
+        "hangar": {
+          "type": "adv-lit",
+          "shader": "adv-lit",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "depthTesting": {
+              "enabled": true
+            }
+          },
+          "albedoMap": "hangarAlbedo",
+          "normalMap": "hangarNormal",
+          "emissiveMap": "hangarEmissive",
+          "metallicMap": "hangarMetallic",
+          "sampler": "default"
+        },
         "cursor": {
           "type": "textured",
           "shader": "textured",
@@ -173,8 +216,21 @@
     },
     "world": [
       {
+        "position": [-6, 0, -4],
+        "rotation": [0, 0, 0],
+        "scale": [0.1, 0.1, 0.1],
+        "components": [
+          {
+            "type": "Mesh Renderer",
+            "mesh": "robot",
+            "material": "robot",
+            "dynamic": true
+          }
+        ]
+      },
+      {
         "name": "player",
-        "position": [0, 0, 10],
+        "position": [0, 10, 0],
         "components": [
           {
             "type": "Camera"
@@ -193,6 +249,45 @@
                 "type": "Mesh Renderer",
                 "mesh": "cube",
                 "material": "metal"
+              }
+            ]
+          },
+          {
+            "name": "Spot Light",
+            "position": [0, 10, -10],
+            "rotation": [90, 0, 0],
+            "scale": [1, 1, 1],
+            "components": [
+              {
+                "type": "Light Component",
+                "lightType": "Spot",
+                "direction": [0, -1, -1],
+                "ambient": [0.2, 0.2, 0.2],
+                "diffuse": [1, 1, 1],
+                "specular": [0.9, 0.9, 0.9],
+                "cutOff": 27,
+                "outerCutOff": 40,
+                "attenuationConstant": 1.0,
+                "attenuationLinear": 0.014,
+                "attenuationQuadratic": 0.0007
+              }
+            ]
+          },
+          {
+            "name": "Spot Light",
+            "components": [
+              {
+                "type": "Light Component",
+                "lightType": "Spot",
+                "direction": [0, 0, -1],
+                "ambient": [0.2, 0.2, 0.2],
+                "diffuse": [1, 1, 1],
+                "specular": [0.9, 0.9, 0.9],
+                "cutOff": 27,
+                "outerCutOff": 40,
+                "attenuationConstant": 1.0,
+                "attenuationLinear": 0.014,
+                "attenuationQuadratic": 0.0007
               }
             ]
           },
@@ -241,68 +336,8 @@
         ]
       },
       {
-        "position": [0, -10, 0],
-        "rotation": [-90, 0, 0],
-        "scale": [100, 100, 1],
-        "components": [
-          {
-            "type": "Mesh Renderer",
-            "mesh": "plane",
-            "material": "grass"
-          }
-        ]
-      },
-      {
-        "position": [0, 1, 2],
-        "rotation": [0, 0, 0],
-        "scale": [2, 2, 2],
-        "components": [
-          {
-            "type": "Mesh Renderer",
-            "mesh": "plane",
-            "material": "glass"
-          }
-        ]
-      },
-      {
         "position": [0, 1, -2],
         "rotation": [0, 0, 0],
-        "scale": [2, 2, 2],
-        "components": [
-          {
-            "type": "Mesh Renderer",
-            "mesh": "plane",
-            "material": "glass"
-          }
-        ]
-      },
-      {
-        "position": [2, 1, 0],
-        "rotation": [0, 90, 0],
-        "scale": [2, 2, 2],
-        "components": [
-          {
-            "type": "Mesh Renderer",
-            "mesh": "plane",
-            "material": "glass"
-          }
-        ]
-      },
-      {
-        "position": [-2, 1, 0],
-        "rotation": [0, 90, 0],
-        "scale": [2, 2, 2],
-        "components": [
-          {
-            "type": "Mesh Renderer",
-            "mesh": "plane",
-            "material": "glass"
-          }
-        ]
-      },
-      {
-        "position": [0, 3, 0],
-        "rotation": [90, 0, 0],
         "scale": [2, 2, 2],
         "components": [
           {
@@ -335,6 +370,132 @@
             "mesh": "cube",
             "material": "metal",
             "dynamic": true
+          }
+        ]
+      },
+      {
+        "position": [0, 14, 0],
+        "rotation": [90, 0, 0],
+        "scale": [30, 30, 30],
+        "components": [
+          {
+            "type": "Mesh Renderer",
+            "mesh": "hangar",
+            "material": "hangar"
+          }
+        ]
+      },
+      {
+        "position": [0, 14, 200],
+        "rotation": [90, 180, 0],
+        "scale": [30, 30, 30],
+        "components": [
+          {
+            "type": "Mesh Renderer",
+            "mesh": "hangar",
+            "material": "hangar"
+          }
+        ]
+      },
+      {
+        "name": "Point Light",
+        "position": [0, 20, 0],
+        "components": [
+          {
+            "type": "Light Component",
+            "lightType": "Point",
+            "direction": [0, -1, 0],
+            "ambient": [0.2, 0.2, 0.2],
+            "diffuse": [1, 1, 1],
+            "specular": [0.4, 0.4, 0.4],
+            "attenuationConstant": 1.0,
+            "attenuationLinear": 0.045,
+            "attenuationQuadratic": 0.0075
+          }
+        ]
+      },
+      {
+        "name": "Point Light",
+        "position": [0, 20, 30],
+        "components": [
+          {
+            "type": "Light Component",
+            "lightType": "Point",
+            "direction": [0, -1, 0],
+            "ambient": [0.2, 0.2, 0.2],
+            "diffuse": [1, 1, 1],
+            "specular": [0.4, 0.4, 0.4],
+            "attenuationConstant": 1.0,
+            "attenuationLinear": 0.045,
+            "attenuationQuadratic": 0.0075
+          }
+        ]
+      },
+      {
+        "name": "Point Light",
+        "position": [0, 30, 60],
+        "components": [
+          {
+            "type": "Light Component",
+            "lightType": "Point",
+            "direction": [0, -1, 0],
+            "ambient": [0.2, 0.2, 0.2],
+            "diffuse": [1, 1, 1],
+            "specular": [0.4, 0.4, 0.4],
+            "attenuationConstant": 1.0,
+            "attenuationLinear": 0.045,
+            "attenuationQuadratic": 0.0075
+          }
+        ]
+      },
+      {
+        "name": "Point Light",
+        "position": [0, 30, 90],
+        "components": [
+          {
+            "type": "Light Component",
+            "lightType": "Point",
+            "direction": [0, -1, 0],
+            "ambient": [0.2, 0.2, 0.2],
+            "diffuse": [1, 1, 1],
+            "specular": [0.4, 0.4, 0.4],
+            "attenuationConstant": 1.0,
+            "attenuationLinear": 0.045,
+            "attenuationQuadratic": 0.0075
+          }
+        ]
+      },
+      {
+        "name": "Point Light",
+        "position": [0, 30, 120],
+        "components": [
+          {
+            "type": "Light Component",
+            "lightType": "Point",
+            "direction": [0, -1, 0],
+            "ambient": [0.2, 0.2, 0.2],
+            "diffuse": [1, 1, 1],
+            "specular": [0.4, 0.4, 0.4],
+            "attenuationConstant": 1.0,
+            "attenuationLinear": 0.045,
+            "attenuationQuadratic": 0.0075
+          }
+        ]
+      },
+      {
+        "name": "Point Light",
+        "position": [0, 30, 150],
+        "components": [
+          {
+            "type": "Light Component",
+            "lightType": "Point",
+            "direction": [0, -1, 0],
+            "ambient": [0.2, 0.2, 0.2],
+            "diffuse": [1, 1, 1],
+            "specular": [0.4, 0.4, 0.4],
+            "attenuationConstant": 1.0,
+            "attenuationLinear": 0.045,
+            "attenuationQuadratic": 0.0075
           }
         ]
       }
