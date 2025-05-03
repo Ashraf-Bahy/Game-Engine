@@ -177,7 +177,8 @@ namespace our
                 }
             }
             // If this entity has a light component, we add it to the light sources list
-            if (auto light = entity->getComponent<LightComponent>(); light)
+            auto light = entity->getComponent<LightComponent>();
+            if (light)
             {
                 LightSource source;
                 source.position = light->getOwner()->getLocalToWorldMatrix() * glm::vec4(0.0, 0.0, 0.0, 1.0f);
@@ -185,6 +186,10 @@ namespace our
                 source.type = light->type;
                 source.light = light;
                 lightSources.push_back(source);
+            }
+            else
+            {
+                printf("No light found in the scene\n");
             }
         }
 

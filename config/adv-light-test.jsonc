@@ -23,10 +23,6 @@
           "vs": "assets/shaders/textured.vert",
           "fs": "assets/shaders/textured.frag"
         },
-        "lit": {
-          "vs": "assets/shaders/lit-textured.vert",
-          "fs": "assets/shaders/lit-textured.frag"
-        },
         "adv-lit": {
           "vs": "assets/shaders/lit-textured.vert",
           "fs": "assets/shaders/pbr.frag"
@@ -101,86 +97,6 @@
         }
       },
       "materials": {
-        "metal": {
-          "type": "lit",
-          "shader": "lit",
-          "pipelineState": {
-            "faceCulling": {
-              "enabled": false
-            },
-            "depthTesting": {
-              "enabled": true
-            }
-          },
-          "albedo": "wood",
-          "specular": "specular",
-          "shininess": 32,
-          "sampler": "default"
-        },
-        "glass": {
-          "type": "lit",
-          "shader": "lit",
-          "pipelineState": {
-            "faceCulling": {
-              "enabled": true
-            },
-            "depthTesting": {
-              "enabled": true
-            }
-          },
-          "albedo": "glass",
-          "specular": "specular",
-          "shininess": 100,
-          "sampler": "default"
-        },
-        "grass": {
-          "type": "lit",
-          "shader": "lit",
-          "pipelineState": {
-            "faceCulling": {
-              "enabled": false
-            },
-            "depthTesting": {
-              "enabled": true
-            }
-          },
-          "albedo": "grass",
-          "specular": "specular",
-          "shininess": 32,
-          "sampler": "default"
-        },
-        "monkey": {
-          "type": "lit",
-          "shader": "lit",
-          "pipelineState": {
-            "faceCulling": {
-              "enabled": false
-            },
-            "depthTesting": {
-              "enabled": true
-            }
-          },
-          "albedo": "monkey",
-          "specular": "specular",
-          "shininess": 50,
-          "sampler": "default"
-        },
-        "moon": {
-          "type": "lit",
-          "shader": "lit",
-          "pipelineState": {
-            "faceCulling": {
-              "enabled": false
-            },
-            "depthTesting": {
-              "enabled": true
-            }
-          },
-          "albedo": "moon",
-          "specular": "specular",
-          "shininess": 100,
-          "sampler": "default"
-        },
         "robot": {
           "type": "adv-lit",
           "shader": "adv-lit",
