@@ -1,0 +1,324 @@
+{
+  "start-scene": "menu",
+  "window": {
+    "title": "Default Game Window",
+    "size": {
+      "width": 1280,
+      "height": 720
+    },
+    "fullscreen": false
+  },
+  "scene": {
+    "renderer": {
+      "sky": "assets/textures/sky.jpg",
+      "postprocess": "assets/shaders/postprocess/vignette.frag"
+    },
+    "assets": {
+      "shaders": {
+        "tinted": {
+          "vs": "assets/shaders/tinted.vert",
+          "fs": "assets/shaders/tinted.frag"
+        },
+        "textured": {
+          "vs": "assets/shaders/textured.vert",
+          "fs": "assets/shaders/textured.frag"
+        },
+        "lit": {
+          "vs": "assets/shaders/lit-textured.vert",
+          "fs": "assets/shaders/lit-textured.frag"
+        }
+      },
+      "textures": {
+        "moon": "assets/textures/moon.jpg",
+        "grass": "assets/textures/grass_ground_d.jpg",
+        "wood": "assets/textures/wood.jpg",
+        "glass": "assets/textures/glass-panels.png",
+        "monkey": "assets/textures/monkey.png",
+        "specular": "assets/textures/specular2.jpg",
+        "robotDiffuse": "assets/textures/robot/diffuse.jpeg",
+        "robotSpecular": "assets/textures/robot/specular.png",
+        "helmetDiffuse": "assets/textures/helmet/albedo.jpg",
+        "helmetSpecular": "assets/textures/helmet/metallic.jpg",
+        "nightStalkerDiffuse": "assets/textures/night_stalker/Legs_and_Body_baseColor.png",
+        "nightStalkerSpecular": "assets/textures/night_stalker/Legs_and_Body_metallicRoughness.png"
+      },
+      "meshes": {
+        "cube": "assets/models/cube.obj",
+        "monkey": "assets/models/monkey.obj",
+        "plane": "assets/models/plane.obj",
+        "sphere": "assets/models/sphere.obj",
+        "robot": "assets/models/robot/robot.gltf",
+        "helmet": "assets/models/helmet/DamagedHelmet.gltf",
+        "nightStalker": "assets/models/night_stalker/scene.gltf"
+      },
+      "samplers": {
+        "default": {},
+        "pixelated": {
+          "MAG_FILTER": "GL_NEAREST"
+        }
+      },
+      "materials": {
+        "metal": {
+          "type": "lit",
+          "shader": "lit",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "depthTesting": {
+              "enabled": true
+            }
+          },
+          "albedo": "wood",
+          "specular": "specular",
+          "shininess": 32,
+          "sampler": "default"
+        },
+        "glass": {
+          "type": "lit",
+          "shader": "lit",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": true
+            },
+            "depthTesting": {
+              "enabled": true
+            }
+          },
+          "albedo": "glass",
+          "specular": "specular",
+          "shininess": 100,
+          "sampler": "default"
+        },
+        "grass": {
+          "type": "lit",
+          "shader": "lit",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "depthTesting": {
+              "enabled": true
+            }
+          },
+          "albedo": "grass",
+          "specular": "specular",
+          "shininess": 32,
+          "sampler": "default"
+        },
+        "monkey": {
+          "type": "lit",
+          "shader": "lit",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "depthTesting": {
+              "enabled": true
+            }
+          },
+          "albedo": "monkey",
+          "specular": "specular",
+          "shininess": 50,
+          "sampler": "default"
+        },
+        "moon": {
+          "type": "lit",
+          "shader": "lit",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "depthTesting": {
+              "enabled": true
+            }
+          },
+          "albedo": "moon",
+          "specular": "specular",
+          "shininess": 100,
+          "sampler": "default"
+        },
+        "robot": {
+          "type": "lit",
+          "shader": "lit",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "depthTesting": {
+              "enabled": true
+            }
+          },
+          "albedo": "robotDiffuse",
+          "specular": "robotSpecular",
+          "shininess": 100,
+          "sampler": "default"
+        },
+        "helmet": {
+          "type": "lit",
+          "shader": "lit",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "depthTesting": {
+              "enabled": true
+            }
+          },
+          "albedo": "helmetDiffuse",
+          "specular": "helmetSpecular",
+          "shininess": 1000,
+          "sampler": "default"
+        },
+        "nightStalker": {
+          "type": "lit",
+          "shader": "lit",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "depthTesting": {
+              "enabled": true
+            }
+          },
+          "albedo": "nightStalkerDiffuse",
+          "specular": "nightStalkerSpecular",
+          "shininess": 100,
+          "sampler": "default"
+        }
+      }
+    },
+    "world": [
+      {
+        "position": [0, 0, 10],
+        "components": [
+          {
+            "type": "Camera"
+          },
+          {
+            "type": "Free Camera Controller"
+          }
+        ],
+        "children": [
+          {
+            "position": [1, -1, -1],
+            "rotation": [45, 45, 0],
+            "scale": [0.1, 0.1, 1.0],
+            "components": [
+              {
+                "type": "Mesh Renderer",
+                "mesh": "cube",
+                "material": "metal"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "position": [3, 0, 3],
+        "rotation": [-45, 0, 0],
+        "components": [
+          {
+            "type": "Mesh Renderer",
+            "mesh": "monkey",
+            "material": "monkey"
+          },
+          {
+            "type": "Movement",
+            "linearVelocity": [0, 0.1, 0],
+            "angularVelocity": [0, 45, 0]
+          }
+        ]
+      },
+      {
+        "position": [0, -1, 0],
+        "rotation": [-90, 0, 0],
+        "scale": [10, 10, 1],
+        "components": [
+          {
+            "type": "Mesh Renderer",
+            "mesh": "plane",
+            "material": "grass"
+          }
+        ]
+      },
+      {
+        "position": [0, 0, 0],
+        "rotation": [90, 0, 0],
+        "scale": [1, 1, 1],
+        "components": [
+          {
+            "type": "Mesh Renderer",
+            "mesh": "cube",
+            "material": "glass"
+          }
+        ]
+      },
+      {
+        "position": [6, 0, -4],
+        "rotation": [90, 0, 0],
+        "scale": [1, 1, 1],
+        "components": [
+          {
+            "type": "Mesh Renderer",
+            "mesh": "helmet",
+            "material": "helmet"
+          }
+        ]
+      },
+      {
+        "position": [-6, 0, -4],
+        "rotation": [0, 0, 0],
+        "scale": [0.1, 0.1, 0.1],
+        "components": [
+          {
+            "type": "Mesh Renderer",
+            "mesh": "robot",
+            "material": "robot"
+          }
+        ]
+      },
+      {
+        "position": [-6, 0, -2],
+        "rotation": [0, 0, 0],
+        "scale": [1, 1, 1],
+        "components": [
+          {
+            "type": "Mesh Renderer",
+            "mesh": "nightStalker",
+            "material": "nightStalker"
+          }
+        ]
+      },
+      {
+        "position": [0, 10, 0],
+        "rotation": [45, 45, 0],
+        "scale": [5, 5, 5],
+        "components": [
+          {
+            "type": "Mesh Renderer",
+            "mesh": "sphere",
+            "material": "moon"
+          }
+        ]
+      },
+      {
+        "name": "Directional Light",
+        "components": [
+          {
+            "type": "Light Component",
+            "lightType": "Directional",
+            "direction": [-1, -0.3, 0],
+            "ambient": [0.2, 0.2, 0.2],
+            "diffuse": [0.8, 0.8, 0.8],
+            "specular": [0.2, 0.2, 0.2]
+          },
+          {
+            "type": "Movement",
+            "angularVelocity": [0, 70, 0]
+          }
+        ]
+      }
+    ]
+  }
+}
