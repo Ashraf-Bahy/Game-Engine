@@ -125,6 +125,9 @@ namespace our
         float fireCooldown = 0.0f;
         const float FIRE_RATE = 0.5f; // Seconds between shots
 
+        std::vector<Entity *> demonPool;
+        Entity *demonTemplate = nullptr;
+
     public:
         void initialize(World *world, glm::ivec2 windowSize);
         void update(World *world, float deltaTime, Application *app);
@@ -147,6 +150,13 @@ namespace our
                      Entity *&hitEntity, glm::vec3 &hitPoint, glm::vec3 &hitNormal);
 
         void fireBullet(World *world, Application *app, float deltaTime);
+
+        // Demon management functions
+        void initializeDemons(World *world, Entity *templateDemon, int poolSize = 20);
+        Entity *spawnDemon(glm::vec3 position, glm::vec3 target, World *world);
+        void returnDemon(Entity *demon);
+        Entity *cloneDemon(Entity *original, World *world);
+        void initializeDemonPhysics(Entity *demon);
     };
 
 }

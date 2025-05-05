@@ -6,6 +6,7 @@
 #include "free-camera-controller.hpp"
 #include "movement.hpp"
 #include "light.hpp"
+#include "demon.hpp"
 
 namespace our
 {
@@ -36,6 +37,10 @@ namespace our
         else if (type == LightComponent::getID())
         {
             component = entity->addComponent<LightComponent>();
+        }
+        else if (type == DemonComponent::getID())
+        {
+            component = entity->addComponent<DemonComponent>();
         }
         if (component)
             component->deserialize(data);

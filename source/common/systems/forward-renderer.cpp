@@ -187,10 +187,6 @@ namespace our
                 source.light = light;
                 lightSources.push_back(source);
             }
-            else
-            {
-                printf("No light found in the scene\n");
-            }
         }
 
         // If there is no camera, we return (we cannot render without a camera)

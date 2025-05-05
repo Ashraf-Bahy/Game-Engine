@@ -2,6 +2,8 @@
 
 #include <unordered_set>
 #include "entity.hpp"
+#include "../components/demon.hpp"
+#include "../components/mesh-renderer.hpp"
 
 namespace our
 {
@@ -80,6 +82,37 @@ namespace our
         }
 
         Entity *getEntity(const std::string &entityName);
+
+        // Entity *cloneEntity(Entity *original)
+        // {
+        //     if (!original || original->world != this)
+        //         return nullptr;
+
+        //     // Create new entity
+        //     Entity *clone = this->add();
+
+        //     // Copy basic transform properties
+        //     clone->localTransform = original->localTransform;
+        //     clone->name = original->name.empty() ? "" : original->name + "_clone";
+
+        //     // Clone specific known components
+        //     if (auto originalComp = original->getComponent<DemonComponent>())
+        //     {
+        //         auto *newComp = clone->addComponent<DemonComponent>();
+        //         *newComp = *originalComp; // Simple copy of all DemonComponent data
+        //     }
+
+        //     if (auto originalMesh = original->getComponent<MeshRendererComponent>())
+        //     {
+        //         auto *newMesh = clone->addComponent<MeshRendererComponent>();
+        //         // Copy only essential mesh renderer properties
+        //         newMesh->mesh = originalMesh->mesh;
+        //         newMesh->material = originalMesh->material;
+        //         newMesh->dynamic = originalMesh->dynamic;
+        //     }
+
+        //     return clone;
+        // }
 
         // Since the world owns all of its entities, they should be deleted alongside it.
         ~World()

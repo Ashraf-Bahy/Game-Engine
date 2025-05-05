@@ -89,7 +89,7 @@ namespace our
                 rigidBodies[entity->id] = rigidBody;
                 meshComponent->bulletBody = rigidBody; // Store the rigid body in the component for later use
             }
-            else // this object will move (dynamic) like demons
+            else // this object will move (dynamic)
             {
                 // Get the mesh data from the component
                 btTriangleIndexVertexArray *meshData = meshComponent->mesh->data;
@@ -428,6 +428,7 @@ namespace our
             fireCooldown = FIRE_RATE;
         }
     }
+
     void PhysicsSystem::destroy()
     {
         // Clean up Bullet Physics resources
@@ -444,4 +445,134 @@ namespace our
         delete broadphase;
         delete debugDrawer;
     }
+
+    // Initialize demon system
+    void PhysicsSystem::initializeDemons(World *world, Entity *templateDemon, int poolSize = 20)
+    {
+        demonTemplate = templateDemon;
+
+        // Pre-create demons with physics bodies
+        for (int i = 0; i < poolSize; i++)
+        {
+            Entity *demon = cloneDemon(templateDemon, world);
+            demon->enabled = false;
+            initializeDemonPhysics(demon);
+            demonPool.push_back(demon);
+        }
+    }
+
+    // Spawn a demon at position
+    Entity *PhysicsSystem::spawnDemon(glm::vec3 position, glm::vec3 target, World *world)
+    {
+        if (demonPool.empty())
+        {
+            // Create more if pool is empty
+            Entity *demon = cloneDemon(demonTemplate, world);
+            initializeDemonPhysics(demon);
+            demonPool.push_back(demon);
+        }
+
+        Entity *demon = demonPool.back();
+        demonPool.pop_back();
+
+        // Setup demon
+        demon->localTransform.position = position;
+        if (auto dc = demon->getComponent<DemonComponent>())
+        {
+            dc->targetPosition = target;
+            dc->health = dc->maxHealth;
+        }
+        demon->enabled = true;
+
+        // Reactivate physics
+        if (auto mesh = demon->getComponent<MeshRendererComponent>())
+        {
+            if (mesh->bulletBody)
+            {
+                mesh->bulletBody->activate();
+                mesh->bulletBody->setWorldTransform(
+                    btTransform(btQuaternion::getIdentity(),
+                                btVector3(position.x, position.y, position.z)));
+            }
+        }
+
+        return demon;
+    }
+
+    // Return demon to pool
+    void PhysicsSystem::returnDemon(Entity *demon)
+    {
+        demon->enabled = false;
+
+        // Deactivate physics
+        if (auto mesh = demon->getComponent<MeshRendererComponent>())
+        {
+            if (mesh->bulletBody)
+            {
+                mesh->bulletBody->setActivationState(DISABLE_SIMULATION);
+            }
+        }
+
+        demonPool.push_back(demon);
+    }
+
+    // Helpers to clone a demon
+    Entity *PhysicsSystem::cloneDemon(Entity *original, World *world)
+    {
+        Entity *clone = world->add();
+        clone->localTransform = original->localTransform;
+
+        // Clone components
+        if (auto originalComp = original->getComponent<DemonComponent>())
+        {
+            auto *newComp = clone->addComponent<DemonComponent>();
+            *newComp = *originalComp;
+        }
+
+        if (auto originalMesh = original->getComponent<MeshRendererComponent>())
+        {
+            auto *newMesh = clone->addComponent<MeshRendererComponent>();
+            newMesh->mesh = originalMesh->mesh;
+            newMesh->material = originalMesh->material;
+            newMesh->dynamic = originalMesh->dynamic;
+        }
+
+        return clone;
+    }
+
+    // Helper to initialize physics for a demon
+    void PhysicsSystem::initializeDemonPhysics(Entity *demon)
+    {
+        if (auto mesh = demon->getComponent<MeshRendererComponent>())
+        {
+            if (mesh->dynamic)
+            {
+                // Similar to your existing physics initialization
+                btConvexHullShape *convexShape = new btConvexHullShape();
+                // ... (add vertices with scaling)
+
+                btTransform btTrans;
+                btTrans.setIdentity();
+                btTrans.setOrigin(btVector3(
+                    demon->localTransform.position.x,
+                    demon->localTransform.position.y,
+                    demon->localTransform.position.z));
+
+                btMotionState *motionState = new btDefaultMotionState(btTrans);
+                btScalar mass = 1.0f;
+                btVector3 inertia(0, 0, 0);
+                convexShape->calculateLocalInertia(mass, inertia);
+
+                btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(
+                    mass, motionState, convexShape, inertia);
+                btRigidBody *body = new btRigidBody(rigidBodyCI);
+                body->setUserPointer(demon);
+
+                dynamicsWorld->addRigidBody(body);
+                rigidBodies[demon->id] = body;
+                mesh->bulletBody = body;
+            }
+        }
+    }
+
 }

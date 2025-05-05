@@ -26,6 +26,9 @@ namespace our
                                   // If parent is null, the entity is a root entity (has no parent).
         Transform localTransform; // The transform of this entity relative to its parent.
 
+        // created for the demon
+        bool enabled = true;
+
         World *getWorld() const { return world; } // Returns the world to which this entity belongs
 
         glm::mat4 getLocalToWorldMatrix() const;  // Computes and returns the transformation from the entities local space to the world space
@@ -120,6 +123,12 @@ namespace our
                     return;
                 }
             }
+        }
+
+        // created for the demon
+        bool isActive() const
+        {
+            return enabled && (parent == nullptr || parent->isActive());
         }
 
         // Since the entity owns its components, they should be deleted alongside the entity
