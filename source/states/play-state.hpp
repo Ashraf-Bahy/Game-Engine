@@ -52,7 +52,7 @@ class Playstate : public our::State
         // Get a reference to the keyboard object
         auto &keyboard = getApp()->getKeyboard();
 
-        physicsSystem.update(&world, (float)deltaTime);
+        physicsSystem.update(&world, (float)deltaTime, getApp());
         physicsSystem.updateCharacterMovement(&world, cameraController, (float)deltaTime);
         // physicsSystem.debugDrawWorld(&world);
 
