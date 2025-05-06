@@ -4,32 +4,32 @@
 
 namespace our
 {
-
     class DemonComponent : public Component
     {
     public:
-        // Target position the demon will move toward (e.g., player base)
-        glm::vec3 targetPosition = {0.0f, 0.0f, 0.0f};
+        glm::vec3 targetPosition = {0, 0, 0};
+        float moveSpeed = 1.5f;
+        float jumpSpeed = 0.0f; // Zero for no jumping
+        float damage = 15.0f;
+        float attackRange = 2.0f;
+        float health = 100.0f;
+        float maxHealth = 100.0f;
+        float contactDamage = 10.0f;
+        float damageCooldown = 1.0f;
+        float currentCooldown = 0.0f;
 
-        // Movement properties
-        float moveSpeed = 2.0f;      // How fast the demon moves
-        float rotationSpeed = 90.0f; // Degrees per second
+        void update(float deltaTime)
+        {
+            // Update damage cooldown
+            if (currentCooldown > 0)
+                currentCooldown -= deltaTime;
+        }
 
-        // Combat properties
-        float damage = 10.0f;     // Damage per second to player
-        float attackRange = 1.5f; // Distance to start attacking
-        float health = 100.0f;    // Current health
-        float maxHealth = 100.0f; // Maximum health
+        bool canDealDamage() const { return currentCooldown <= 0; }
+        void resetDamageCooldown() { currentCooldown = damageCooldown; }
 
-        // The ID of the spawn point this demon came from
-        int spawnPointId = -1;
-
-        // Reads demon parameters from the given json object
         void deserialize(const nlohmann::json &data) override
         {
-            if (!data.is_object())
-                return;
-
             // Target position
             if (data.contains("targetPosition"))
             {
@@ -38,18 +38,17 @@ namespace our
                 targetPosition.z = data["targetPosition"][2];
             }
 
-            // Movement
             moveSpeed = data.value("moveSpeed", moveSpeed);
-            rotationSpeed = glm::radians(data.value("rotationSpeed", rotationSpeed));
-
-            // Combat
+            jumpSpeed = data.value("jumpSpeed", jumpSpeed);
             damage = data.value("damage", damage);
             attackRange = data.value("attackRange", attackRange);
             health = data.value("health", health);
             maxHealth = data.value("maxHealth", maxHealth);
-
-            // Spawn info
-            spawnPointId = data.value("spawnPointId", spawnPointId);
+            contactDamage = data.value("contactDamage", contactDamage);
+            damageCooldown = data.value("damageCooldown", damageCooldown);
         }
+
+        // The ID of this component type is "Mesh Renderer"
+        static std::string getID() { return "DemonComponent"; }
     };
 }

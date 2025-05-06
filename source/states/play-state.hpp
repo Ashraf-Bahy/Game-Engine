@@ -7,7 +7,7 @@
 #include <systems/free-camera-controller.hpp>
 #include <systems/movement.hpp>
 #include <asset-loader.hpp>
-
+#include "../common/ecs/entity.hpp"
 #include <systems/physics.hpp>
 
 // This state shows how to use the ECS framework and deserialization.
@@ -19,6 +19,9 @@ class Playstate : public our::State
     our::FreeCameraControllerSystem cameraController;
     our::MovementSystem movementSystem;
     our::PhysicsSystem physicsSystem;
+
+    float demonSpawnTimer = 0.0f;
+    int maxDemons = 5;
 
     void onInitialize() override
     {
@@ -40,6 +43,7 @@ class Playstate : public our::State
         auto size = getApp()->getFrameBufferSize();
         renderer.initialize(size, config["renderer"]);
         physicsSystem.initialize(&world, size);
+        physicsSystem.initializeDemons(&world, 10); // Pool size 10
     }
 
     void onDraw(double deltaTime) override
@@ -54,7 +58,8 @@ class Playstate : public our::State
 
         physicsSystem.update(&world, (float)deltaTime, getApp());
         physicsSystem.updateCharacterMovement(&world, cameraController, (float)deltaTime);
-        // physicsSystem.debugDrawWorld(&world);
+        physicsSystem.debugDrawWorld(&world);
+        physicsSystem.updateSpawning(&world, deltaTime);
 
         if (keyboard.justPressed(GLFW_KEY_ESCAPE))
         {

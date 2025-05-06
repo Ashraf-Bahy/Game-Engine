@@ -128,6 +128,16 @@ namespace our
         std::vector<Entity *> demonPool;
         Entity *demonTemplate = nullptr;
 
+        // For demons
+        std::vector<btPairCachingGhostObject *> demonGhosts;
+        std::vector<btKinematicCharacterController *> demonControllers;
+
+        // Spawner members
+        float spawnTimer = 0.0f;
+        float spawnInterval = 5.0f;
+        int maxActiveDemons = 2;
+        glm::vec3 defaultTarget = {0, 0, 0};
+
     public:
         void initialize(World *world, glm::ivec2 windowSize);
         void update(World *world, float deltaTime, Application *app);
@@ -152,11 +162,24 @@ namespace our
         void fireBullet(World *world, Application *app, float deltaTime);
 
         // Demon management functions
-        void initializeDemons(World *world, Entity *templateDemon, int poolSize = 20);
+        void initializeDemons(World *world, int poolSize = 20);
         Entity *spawnDemon(glm::vec3 position, glm::vec3 target, World *world);
         void returnDemon(Entity *demon);
         Entity *cloneDemon(Entity *original, World *world);
         void initializeDemonPhysics(Entity *demon);
+
+        void updateDemonMovement(Entity *demon, float deltaTime);
+
+        // Configure spawning
+        void setDemonSpawning(float interval, int maxDemons, glm::vec3 target)
+        {
+            spawnInterval = interval;
+            maxActiveDemons = maxDemons;
+            defaultTarget = target;
+        }
+
+        // Call this every frame
+        void updateSpawning(World *world, float deltaTime);
     };
 
 }

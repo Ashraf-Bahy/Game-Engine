@@ -296,14 +296,52 @@ namespace our
             {
                 color = btVector3(1, 0, 0);
             }
-            dynamicsWorld->debugDrawObject(obj->getWorldTransform(), obj->getCollisionShape(), color);
+            if (!(obj->getCollisionFlags() & btCollisionObject::CF_STATIC_OBJECT))
+                dynamicsWorld->debugDrawObject(obj->getWorldTransform(), obj->getCollisionShape(), color);
         }
         debugDrawer->flushLines(world);
     }
 
+    void PhysicsSystem::updateSpawning(World *world, float deltaTime)
+    {
+        if (spawnInterval <= 0)
+            return; // Spawning disabled
+
+        spawnTimer += deltaTime;
+        if (spawnTimer >= spawnInterval)
+        {
+            spawnTimer = 0.0f;
+
+            // Count active demons
+            int activeCount = 0;
+            for (auto entity : world->getEntities())
+            {
+                if (entity->getComponent<DemonComponent>() && entity->enabled)
+                {
+                    activeCount++;
+                }
+            }
+
+            // Spawn if under limit
+            if (activeCount < maxActiveDemons)
+            {
+                glm::vec3 spawnPos = {
+                    rand() % 20 - 10.0f, // -10 to 10
+                    0.0f,
+                    rand() % 20 - 10.0f};
+
+                // glm::vec3 spawnPos = {
+                //     0.0f, // -10 to 10
+                //     0.0f,
+                //     0.0f};
+
+                spawnDemon(spawnPos, defaultTarget, world);
+            }
+        }
+    }
+
     void PhysicsSystem::update(World *world, float deltaTime, Application *app)
     {
-        // Step the physics simulation
 
         if (dynamicsWorld)
         {
@@ -312,6 +350,20 @@ namespace our
             dynamicsWorld->updateSingleAabb(playerGhost); // Update AABB for the ghost object
             // moveCharacter(world, deltaTime);
             fireBullet(world, app, deltaTime);
+            // Update demon movement
+            int i = 0;
+            for (auto entity : world->getEntities())
+            {
+                if (auto demon = entity->getComponent<DemonComponent>())
+                {
+                    printf("Demon %d: %s\n", i++, entity->name.c_str());
+                    if (entity->enabled)
+                    {
+                        updateDemonMovement(entity, deltaTime);
+                        demon->update(deltaTime);
+                    }
+                }
+            }
         }
         else
         {
@@ -447,14 +499,14 @@ namespace our
     }
 
     // Initialize demon system
-    void PhysicsSystem::initializeDemons(World *world, Entity *templateDemon, int poolSize = 20)
+    void PhysicsSystem::initializeDemons(World *world, int poolSize)
     {
-        demonTemplate = templateDemon;
-
+        Entity *demonTemplate = world->getEntity("demon_template"); // Load from JSON
         // Pre-create demons with physics bodies
         for (int i = 0; i < poolSize; i++)
         {
-            Entity *demon = cloneDemon(templateDemon, world);
+            Entity *demon = cloneDemon(demonTemplate, world);
+            printf("intializing Demon %d: %s\n", i, demon->name.c_str());
             demon->enabled = false;
             initializeDemonPhysics(demon);
             demonPool.push_back(demon);
@@ -464,6 +516,7 @@ namespace our
     // Spawn a demon at position
     Entity *PhysicsSystem::spawnDemon(glm::vec3 position, glm::vec3 target, World *world)
     {
+        printf("spawning demon at %f %f %f\n", position.x, position.y, position.z);
         if (demonPool.empty())
         {
             // Create more if pool is empty
@@ -504,33 +557,45 @@ namespace our
     {
         demon->enabled = false;
 
-        // Deactivate physics
         if (auto mesh = demon->getComponent<MeshRendererComponent>())
         {
-            if (mesh->bulletBody)
+            if (mesh->characterController)
             {
-                mesh->bulletBody->setActivationState(DISABLE_SIMULATION);
+                // Remove from world
+                dynamicsWorld->removeAction(mesh->characterController);
+                dynamicsWorld->removeCollisionObject(mesh->ghostObject);
+
+                // Clean up memory
+                delete mesh->characterController;
+                delete mesh->ghostObject->getCollisionShape();
+                delete mesh->ghostObject;
+
+                mesh->characterController = nullptr;
+                mesh->ghostObject = nullptr;
             }
         }
-
-        demonPool.push_back(demon);
     }
 
     // Helpers to clone a demon
     Entity *PhysicsSystem::cloneDemon(Entity *original, World *world)
     {
+        if (!original)
+            printf("trying to clone a null demon\n");
+
         Entity *clone = world->add();
         clone->localTransform = original->localTransform;
 
         // Clone components
         if (auto originalComp = original->getComponent<DemonComponent>())
         {
+            printf("cloning demon component\n");
             auto *newComp = clone->addComponent<DemonComponent>();
             *newComp = *originalComp;
         }
 
         if (auto originalMesh = original->getComponent<MeshRendererComponent>())
         {
+            printf("cloning demon mesh\n");
             auto *newMesh = clone->addComponent<MeshRendererComponent>();
             newMesh->mesh = originalMesh->mesh;
             newMesh->material = originalMesh->material;
@@ -545,32 +610,91 @@ namespace our
     {
         if (auto mesh = demon->getComponent<MeshRendererComponent>())
         {
-            if (mesh->dynamic)
+            // Create capsule shape for character controller
+            btConvexShape *capsule = new btCapsuleShapeZ(
+                0.5f,
+                2.0f);
+
+            // Create ghost object
+            mesh->ghostObject = new btPairCachingGhostObject();
+            mesh->ghostObject->setCollisionShape(capsule);
+            mesh->ghostObject->setCollisionFlags(btCollisionObject::CF_CHARACTER_OBJECT);
+
+            // Set initial transform
+            btTransform startTransform;
+            startTransform.setIdentity();
+            startTransform.setOrigin(btVector3(
+                demon->localTransform.position.x,
+                demon->localTransform.position.y,
+                demon->localTransform.position.z));
+            mesh->ghostObject->setWorldTransform(startTransform);
+
+            // Create character controller
+            mesh->characterController = new btKinematicCharacterController(
+                mesh->ghostObject,
+                capsule,
+                0.35f);
+
+            // Configure controller
+            if (auto demonComp = demon->getComponent<DemonComponent>())
             {
-                // Similar to your existing physics initialization
-                btConvexHullShape *convexShape = new btConvexHullShape();
-                // ... (add vertices with scaling)
+                mesh->characterController->setGravity(btVector3(0, -9.81f, 0));
+                mesh->characterController->setFallSpeed(55.0f);
+                mesh->characterController->setJumpSpeed(demonComp->jumpSpeed);
+                mesh->characterController->setMaxJumpHeight(1.0f);
+            }
 
-                btTransform btTrans;
-                btTrans.setIdentity();
-                btTrans.setOrigin(btVector3(
-                    demon->localTransform.position.x,
-                    demon->localTransform.position.y,
-                    demon->localTransform.position.z));
+            // Add to world
+            dynamicsWorld->addCollisionObject(mesh->ghostObject,
+                                              btBroadphaseProxy::CharacterFilter,
+                                              btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter);
+            dynamicsWorld->addAction(mesh->characterController);
 
-                btMotionState *motionState = new btDefaultMotionState(btTrans);
-                btScalar mass = 1.0f;
-                btVector3 inertia(0, 0, 0);
-                convexShape->calculateLocalInertia(mass, inertia);
+            // Store reference to entity
+            mesh->ghostObject->setUserPointer(demon);
+        }
+    }
 
-                btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(
-                    mass, motionState, convexShape, inertia);
-                btRigidBody *body = new btRigidBody(rigidBodyCI);
-                body->setUserPointer(demon);
+    void PhysicsSystem::updateDemonMovement(Entity *demon, float deltaTime)
+    {
+        printf("updating demon movement\n");
+        if (auto demonComp = demon->getComponent<DemonComponent>())
+        {
+            if (auto mesh = demon->getComponent<MeshRendererComponent>())
+            {
+                if (mesh->characterController)
+                {
+                    // Calculate movement direction
+                    glm::vec3 targetDir = glm::normalize(
+                        demonComp->targetPosition - demon->localTransform.position);
 
-                dynamicsWorld->addRigidBody(body);
-                rigidBodies[demon->id] = body;
-                mesh->bulletBody = body;
+                    // Convert to bullet vector and apply speed
+                    btVector3 walkDirection(
+                        targetDir.x * demonComp->moveSpeed,
+                        targetDir.y * demonComp->moveSpeed,
+                        targetDir.z * demonComp->moveSpeed);
+
+                    // Apply movement
+                    mesh->characterController->setWalkDirection(walkDirection);
+
+                    // Update entity transform from physics
+                    btTransform transform;
+                    if (mesh->ghostObject)
+                    {
+                        transform = mesh->ghostObject->getWorldTransform();
+                        demon->localTransform.position = glm::vec3(
+                            transform.getOrigin().x(),
+                            transform.getOrigin().y(),
+                            transform.getOrigin().z());
+
+                        // Optional: Update rotation to face movement direction
+                        if (walkDirection.length2() > 0.1f)
+                        {
+                            float yaw = atan2(walkDirection.x(), walkDirection.z());
+                            demon->localTransform.rotation.y = yaw;
+                        }
+                    }
+                }
             }
         }
     }

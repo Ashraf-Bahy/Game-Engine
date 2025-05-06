@@ -5,6 +5,8 @@
 #include "../material/material.hpp"
 #include "../asset-loader.hpp"
 #include <btBulletCollisionCommon.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <BulletDynamics/Character/btKinematicCharacterController.h>
 
 namespace our
 {
@@ -21,6 +23,10 @@ namespace our
         btBvhTriangleMeshShape *shape = nullptr;
         btTriangleIndexVertexArray *shapeData = nullptr;
         btTriangleMesh *triangleMesh = nullptr;
+
+        btPairCachingGhostObject *ghostObject = nullptr;
+        btKinematicCharacterController *characterController = nullptr;
+        bool isCharacter = false;
 
         // The ID of this component type is "Mesh Renderer"
         static std::string getID() { return "Mesh Renderer"; }
