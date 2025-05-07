@@ -389,42 +389,6 @@ namespace our
 
     void PhysicsSystem::update(World *world, float deltaTime, Application *app)
     {
-        // Handle volume control keys
-        auto &keyboard = app->getKeyboard();
-
-        // Press - key to lower volume
-        if (keyboard.justPressed(GLFW_KEY_MINUS))
-        {
-            int currentVolume = audioSystem.getMusicVolume();
-            audioSystem.setMusicVolume(std::max(0, currentVolume - 16));
-            printf("[INFO] Music volume decreased to: %d\n", audioSystem.getMusicVolume());
-        }
-
-        // Press = key to increase volume
-        if (keyboard.justPressed(GLFW_KEY_EQUAL))
-        {
-            int currentVolume = audioSystem.getMusicVolume();
-            audioSystem.setMusicVolume(std::min(MIX_MAX_VOLUME, currentVolume + 16));
-            printf("[INFO] Music volume increased to: %d\n", audioSystem.getMusicVolume());
-        }
-
-        // Press 0 key to mute/unmute music
-        if (keyboard.justPressed(GLFW_KEY_0))
-        {
-            static int savedVolume = MIX_MAX_VOLUME;
-            if (audioSystem.getMusicVolume() > 0)
-            {
-                savedVolume = audioSystem.getMusicVolume();
-                audioSystem.setMusicVolume(0);
-                printf("[INFO] Music muted\n");
-            }
-            else
-            {
-                audioSystem.setMusicVolume(savedVolume);
-                printf("[INFO] Music unmuted to: %d\n", savedVolume);
-            }
-        }
-
         // Step the physics simulation
         if (dynamicsWorld)
         {
@@ -464,6 +428,12 @@ namespace our
             auto health = player->getComponent<HealthComponent>();
 
             health->update(deltaTime);
+            if (health->currentHealth <= 0)
+            {
+                // Play player death sound
+                audioSystem.playSound("player_death.mp3");
+                app->changeState("menu");
+            }
             checkDemonProximity(world, deltaTime);
         }
         else
