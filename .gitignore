@@ -30,3 +30,6 @@ errors/
 
 vendor/
 vendor/bullet3
+
+*.zip
+*.rar

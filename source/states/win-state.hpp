@@ -11,10 +11,10 @@
 #include <array>
 
 // This struct is used to store the location and size of a button and the code it should execute when clicked
-struct Button {
+struct WinButton {
     // The position (of the top-left corner) of the button and its size in pixels
     glm::vec2 position, size;
-    // The function that should be excuted when the button is clicked. It takes no arguments and returns nothing.
+    // The function that should be executed when the button is clicked. It takes no arguments and returns nothing.
     std::function<void()> action;
 
     // This function returns true if the given vector v is inside the button. Otherwise, false is returned.
@@ -33,36 +33,36 @@ struct Button {
     }
 };
 
-// This state shows how to use some of the abstractions we created to make a menu.
-class Menustate: public our::State {
+// This state shows a win screen when the player completes the game successfully
+class WinState: public our::State {
 
-    // A meterial holding the menu shader and the menu texture to draw
-    our::TexturedMaterial* menuMaterial;
+    // A material holding the win screen shader and texture to draw
+    our::TexturedMaterial* winMaterial;
     // A material to be used to highlight hovered buttons (we will use blending to create a negative effect).
-    our::TintedMaterial * highlightMaterial;
-    // A rectangle mesh on which the menu material will be drawn
+    our::TintedMaterial* highlightMaterial;
+    // A rectangle mesh on which the win material will be drawn
     our::Mesh* rectangle;
     // A variable to record the time since the state is entered (it will be used for the fading effect).
     float time;
-    // An array of the button that we can interact with
-    std::array<Button, 2> buttons;
+    // An array of the buttons that we can interact with (continue to next level and back to menu)
+    std::array<WinButton, 2> buttons;
 
     void onInitialize() override {
-        // First, we create a material for the menu's background
-        menuMaterial = new our::TexturedMaterial();
+        // First, we create a material for the win screen background
+        winMaterial = new our::TexturedMaterial();
         // Here, we load the shader that will be used to draw the background
-        menuMaterial->shader = new our::ShaderProgram();
-        menuMaterial->shader->attach("assets/shaders/textured.vert", GL_VERTEX_SHADER);
-        menuMaterial->shader->attach("assets/shaders/textured.frag", GL_FRAGMENT_SHADER);
-        menuMaterial->shader->link();
-        // Then we load the menu texture
-        menuMaterial->texture = our::texture_utils::loadImage("assets/textures/menu.jpg");
-        // Initially, the menu material will be black, then it will fade in
-        menuMaterial->tint = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+        winMaterial->shader = new our::ShaderProgram();
+        winMaterial->shader->attach("assets/shaders/textured.vert", GL_VERTEX_SHADER);
+        winMaterial->shader->attach("assets/shaders/textured.frag", GL_FRAGMENT_SHADER);
+        winMaterial->shader->link();
+        // Then we load the win screen texture
+        winMaterial->texture = our::texture_utils::loadImage("assets/textures/victory.jpg"); // Using menu texture for now, should be replaced with a win screen texture
+        // Initially, the win material will be black, then it will fade in
+        winMaterial->tint = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
-        menuMaterial->sampler = new our::Sampler();
-        menuMaterial->sampler->set(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        menuMaterial->sampler->set(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        winMaterial->sampler = new our::Sampler();
+        winMaterial->sampler->set(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        winMaterial->sampler->set(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         // Second, we create a material to highlight the hovered buttons
         highlightMaterial = new our::TintedMaterial();
@@ -95,21 +95,14 @@ class Menustate: public our::State {
         // Reset the time elapsed since the state is entered.
         time = 0;
 
-        // Fill the positions, sizes and actions for the menu buttons
-        // Note that we use lambda expressions to set the actions of the buttons.
-        // A lambda expression consists of 3 parts:
-        // - The capture list [] which is the variables that the lambda should remember because it will use them during execution.
-        //      We store [this] in the capture list since we will use it in the action.
-        // - The argument list () which is the arguments that the lambda should receive when it is called.
-        //      We leave it empty since button actions receive no input.
-        // - The body {} which contains the code to be executed. 
+        // Fill the positions, sizes and actions for the win screen buttons
         buttons[0].position = {830.0f, 607.0f};
         buttons[0].size = {400.0f, 33.0f};
-        buttons[0].action = [this](){this->getApp()->changeState("play");};
+        buttons[0].action = [this](){this->getApp()->changeState("play");}; // Continue - go to next level or reset play state
 
         buttons[1].position = {830.0f, 644.0f};
         buttons[1].size = {400.0f, 33.0f};
-        buttons[1].action = [this](){this->getApp()->close();};
+        buttons[1].action = [this](){this->getApp()->changeState("menu");}; // Back to menu
     }
 
     void onDraw(double deltaTime) override {
@@ -117,11 +110,11 @@ class Menustate: public our::State {
         auto& keyboard = getApp()->getKeyboard();
 
         if(keyboard.justPressed(GLFW_KEY_SPACE)){
-            // If the space key is pressed in this frame, go to the play state
+            // If the space key is pressed in this frame, go to the play state (continue)
             getApp()->changeState("play");
         } else if(keyboard.justPressed(GLFW_KEY_ESCAPE)) {
-            // If the escape key is pressed in this frame, exit the game
-            getApp()->close();
+            // If the escape key is pressed in this frame, go back to the menu
+            getApp()->changeState("menu");
         }
 
         // Get a reference to the mouse object and get the current mouse position
@@ -129,7 +122,7 @@ class Menustate: public our::State {
         glm::vec2 mousePosition = mouse.getMousePosition();
 
         // If the mouse left-button is just pressed, check if the mouse was inside
-        // any menu button. If it was inside a menu button, run the action of the button.
+        // any win screen button. If it was inside a button, run the action of the button.
         if(mouse.justPressed(0)){
             for(auto& button: buttons){
                 if(button.isInside(mousePosition))
@@ -137,29 +130,29 @@ class Menustate: public our::State {
             }
         }
 
-        // Get the framebuffer size to set the viewport and the create the projection matrix.
+        // Get the framebuffer size to set the viewport and create the projection matrix.
         glm::ivec2 size = getApp()->getFrameBufferSize();
         // Make sure the viewport covers the whole size of the framebuffer.
         glViewport(0, 0, size.x, size.y);
 
         // The view matrix is an identity (there is no camera that moves around).
-        // The projection matrix applys an orthographic projection whose size is the framebuffer size in pixels
-        // so that the we can define our object locations and sizes in pixels.
+        // The projection matrix applies an orthographic projection whose size is the framebuffer size in pixels
+        // so that we can define our object locations and sizes in pixels.
         // Note that the top is at 0.0 and the bottom is at the framebuffer height. This allows us to consider the top-left
         // corner of the window to be the origin which makes dealing with the mouse input easier. 
         glm::mat4 VP = glm::ortho(0.0f, (float)size.x, (float)size.y, 0.0f, 1.0f, -1.0f);
-        // The local to world (model) matrix of the background which is just a scaling matrix to make the menu cover the whole
-        // window. Note that we defind the scale in pixels.
+        // The local to world (model) matrix of the background which is just a scaling matrix to make the win screen cover the whole
+        // window. Note that we define the scale in pixels.
         glm::mat4 M = glm::scale(glm::mat4(1.0f), glm::vec3(size.x, size.y, 1.0f));
 
         // First, we apply the fading effect.
         time += (float)deltaTime;
-        menuMaterial->tint = glm::vec4(glm::smoothstep(0.00f, 2.00f, time));
-        // Then we render the menu background
-        // Notice that I don't clear the screen first, since I assume that the menu rectangle will draw over the whole
+        winMaterial->tint = glm::vec4(glm::smoothstep(0.00f, 2.00f, time));
+        // Then we render the win screen background
+        // Notice that I don't clear the screen first, since I assume that the win screen rectangle will draw over the whole
         // window anyway.
-        menuMaterial->setup();
-        menuMaterial->shader->set("transform", VP*M);
+        winMaterial->setup();
+        winMaterial->shader->set("transform", VP*M);
         rectangle->draw();
 
         // For every button, check if the mouse is inside it. If the mouse is inside, we draw the highlight rectangle over it.
@@ -170,15 +163,14 @@ class Menustate: public our::State {
                 rectangle->draw();
             }
         }
-        
     }
 
     void onDestroy() override {
         // Delete all the allocated resources
         delete rectangle;
-        delete menuMaterial->texture;
-        delete menuMaterial->shader;
-        delete menuMaterial;
+        delete winMaterial->texture;
+        delete winMaterial->shader;
+        delete winMaterial;
         delete highlightMaterial->shader;
         delete highlightMaterial;
     }

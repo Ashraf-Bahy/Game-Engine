@@ -22,9 +22,9 @@ private:
     bool initialized = false;
     
     // Volume levels (0-128)
-    int sfxVolume = MIX_MAX_VOLUME;
-    int voiceVolume = MIX_MAX_VOLUME;
-    int musicVolume = MIX_MAX_VOLUME / 8;
+    int sfxVolume = MIX_MAX_VOLUME / 8;
+    int voiceVolume = MIX_MAX_VOLUME * 4;
+    int musicVolume = MIX_MAX_VOLUME / 16;
 
 public:
     AudioSystem();

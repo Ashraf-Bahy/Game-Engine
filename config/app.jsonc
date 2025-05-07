@@ -6,12 +6,12 @@
       "width": 1280,
       "height": 720
     },
-    "fullscreen": false
+    "fullscreen": true
   },
   "scene": {
     "renderer": {
       "sky": "assets/textures/sky.jpg",
-      "postprocess": "assets/shaders/postprocess/vignette.frag"
+      "postprocess": "assets/shaders/postprocess/film-grain.frag"
     },
     "assets": {
       "shaders": {
@@ -55,7 +55,10 @@
         "flashAlbedo": "assets/textures/flash/Material_001_baseColor.jpeg",
         "flashNormal": "assets/textures/flash/Material_001_normal.png",
         "flashMetallic": "assets/textures/flash/Material_001_metallicRoughness.png",
-        "serverAlbedo": "assets/textures/server/Material.001_baseColor.png"
+        "serverAlbedo": "assets/textures/server/Material.001_baseColor.png",
+        "diceAlbedo": "assets/textures/dice/Dice_4k_baseColor.png",
+        "diceEmissive": "assets/textures/dice/Dice_4k_emissive.png",
+        "diceMetallic": "assets/textures/dice/Dice_4k_metallicRoughness.png"
       },
       "meshes": {
         "cube": "assets/models/cube.obj",
@@ -68,7 +71,8 @@
         "nightStalker": "assets/models/night_stalker/scene.gltf",
         "monster": "assets/models/monster/scene.gltf",
         "flash": "assets/models/flash/scene.gltf",
-        "server": "assets/models/server/scene.gltf"
+        "server": "assets/models/server/scene.gltf",
+        "dice": "assets/models/dice/scene.gltf"
       },
       "samplers": {
         "default": {},
@@ -314,23 +318,39 @@
           "normalMap": "flashNormal",
           "metallicMap": "flashMetallic",
           "sampler": "default"
+        },
+        "dice": {
+          "type": "adv-lit",
+          "shader": "adv-lit",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "depthTesting": {
+              "enabled": true
+            }
+          },
+          "albedoMap": "diceAlbedo",
+          "emissiveMap": "diceEmissive",
+          "metallicMap": "diceMetallic",
+          "sampler": "default"
         }
       }
     },
     "world": [
-      {
-        "position": [-6, 0, -4],
-        "rotation": [0, 0, 0],
-        "scale": [0.1, 0.1, 0.1],
-        "components": [
-          {
-            "type": "Mesh Renderer",
-            "mesh": "robot",
-            "material": "robot",
-            "dynamic": true
-          }
-        ]
-      },
+      // {
+      //   "position": [-6, 0, -4],
+      //   "rotation": [0, 0, 0],
+      //   "scale": [0.1, 0.1, 0.1],
+      //   "components": [
+      //     {
+      //       "type": "Mesh Renderer",
+      //       "mesh": "robot",
+      //       "material": "robot",
+      //       "dynamic": true
+      //     }
+      //   ]
+      // },
       {
         "name": "player",
         "position": [0, 10, 0],
@@ -465,19 +485,7 @@
           }
         ]
       },
-      {
-        "name": "monkey",
-        "rotation": [-45, 0, 0],
-        "position": [7, 5, 0],
-        "components": [
-          {
-            "type": "Mesh Renderer",
-            "mesh": "monkey",
-            "material": "monkey",
-            "dynamic": true
-          }
-        ]
-      },
+
       // {
       //   "position": [0, 1, -2],
       //   "rotation": [0, 0, 0],
@@ -503,19 +511,6 @@
       //     }
       //   ]
       // },
-      {
-        "position": [5, 5, 5],
-        "rotation": [0, 0, 0],
-        "scale": [1, 1, 1.0],
-        "components": [
-          {
-            "type": "Mesh Renderer",
-            "mesh": "cube",
-            "material": "metal",
-            "dynamic": true
-          }
-        ]
-      },
       {
         "position": [0, 14, 0],
         "rotation": [90, 0, 0],
@@ -702,6 +697,7 @@
       {
         "name": "demon_template",
         "position": [7, 20, 0],
+        "scale":[2, 2, 2],
         "components": [
           {
             "type": "Mesh Renderer",
@@ -751,15 +747,14 @@
         ]
       },
       {
-        "position": [3.32242, -14.994026, 103.242325],
+        "position": [3.32242, -11.994026, 103.242325],
         "rotation": [0, 0, 0],
-        "scale": [10, 10, 10.0],
+        "scale": [5, 5, 5],
         "components": [
           {
             "type": "Mesh Renderer",
-            "mesh": "server",
-            "material": "server",
-            "dynamic": true
+            "mesh": "dice",
+            "material": "dice"
           }
         ]
       }
