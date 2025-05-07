@@ -54,7 +54,8 @@
         "rayGunMetallic": "assets/textures/raygun/Material_001_metallicRoughness.png",
         "flashAlbedo": "assets/textures/flash/Material_001_baseColor.jpeg",
         "flashNormal": "assets/textures/flash/Material_001_normal.png",
-        "flashMetallic": "assets/textures/flash/Material_001_metallicRoughness.png"
+        "flashMetallic": "assets/textures/flash/Material_001_metallicRoughness.png",
+        "serverAlbedo": "assets/textures/server/Material.001_baseColor.png"
       },
       "meshes": {
         "cube": "assets/models/cube.obj",
@@ -66,7 +67,8 @@
         "rayGun": "assets/models/raygun/scene.gltf",
         "nightStalker": "assets/models/night_stalker/scene.gltf",
         "monster": "assets/models/monster/scene.gltf",
-        "flash": "assets/models/flash/scene.gltf"
+        "flash": "assets/models/flash/scene.gltf",
+        "server": "assets/models/server/scene.gltf"
       },
       "samplers": {
         "default": {},
@@ -75,6 +77,21 @@
         }
       },
       "materials": {
+        "server": {
+          "type": "adv-lit",
+          "shader": "adv-lit",
+          "pipelineState": {
+            "faceCulling": {
+              "enabled": false
+            },
+            "depthTesting": {
+              "enabled": true
+            }
+          },
+          "tint": [1, 1, 1, 1],
+          "albedoMap": "serverAlbedo",
+          "sampler": "default"
+        },
         "metal": {
           "type": "tinted",
           "shader": "tinted",
@@ -730,6 +747,19 @@
                 "attenuationQuadratic": 0.44
               }
             ]
+          }
+        ]
+      },
+      {
+        "position": [3.32242, -14.994026, 103.242325],
+        "rotation": [0, 0, 0],
+        "scale": [10, 10, 10.0],
+        "components": [
+          {
+            "type": "Mesh Renderer",
+            "mesh": "server",
+            "material": "server",
+            "dynamic": true
           }
         ]
       }
