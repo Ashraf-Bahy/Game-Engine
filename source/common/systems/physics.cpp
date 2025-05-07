@@ -10,6 +10,7 @@
 #include <BulletCollision/CollisionShapes/btShapeHull.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <BulletDynamics/Character/btKinematicCharacterController.h>
+ 
 
 namespace our
 {
@@ -63,8 +64,7 @@ namespace our
         // 4. Add to the world
         dynamicsWorld->addCollisionObject(playerGhost,
                                           btBroadphaseProxy::CharacterFilter,
-                                          btBroadphaseProxy::StaticFilter | // Mask
-                                              btBroadphaseProxy::CharacterFilter);
+                                          btBroadphaseProxy::AllFilter);
         // but now this does not collide with the dynamic objects
         // it only collide with static and kinematic objects
         Entity *player = world->getEntity("player");
@@ -94,7 +94,7 @@ namespace our
             audioSystem.loadSound("background", "assets/audio/music/background.mp3", AudioType::MUSIC);
 
             // Play introduction narration
-            audioSystem.playVoice("narration_intro");
+            audioSystem.playVoice("narration_intro", -1);
 
             // Start background music
             audioSystem.playMusic("background", -1); // -1 means loop indefinitely
@@ -360,22 +360,22 @@ namespace our
             }
 
             // Spawn if under limit
-            glm::vec3 spawnPos;
-            if (activeCount == 0)
-            {
-                spawnPos = {0.0f, 10.0f, 10.0f}; // Spawn at the origin
-            }
-            else
-            {
-                spawnPos = {0.0f, -10.0f, -10.0f}; // Random spawn position
-            }
+            // glm::vec3 spawnPos;
+            // if (activeCount == 0)
+            // {
+            //     spawnPos = {0.0f, 10.0f, 10.0f}; // Spawn at the origin
+            // }
+            // else
+            // {
+            //     spawnPos = {0.0f, -10.0f, -10.0f}; // Random spawn position
+            // }
 
             if (activeCount <= maxActiveDemons && demonPool.size())
             {
-                // glm::vec3 spawnPos = {
-                //     rand() % 20 - 10.0f, // -10 to 10
-                //     0.0f,
-                //     rand() % 20 - 10.0f};
+                glm::vec3 spawnPos = {
+                    rand() % 20 - 10.0f, // -10 to 10
+                    0.0f,
+                    rand() % 20 - 10.0f};
 
                 // glm::vec3 spawnPos = {
                 //     0.0f, // -10 to 10
@@ -389,6 +389,7 @@ namespace our
 
     void PhysicsSystem::update(World *world, float deltaTime, Application *app)
     {
+       
         // Step the physics simulation
         if (dynamicsWorld)
         {
@@ -432,9 +433,10 @@ namespace our
             {
                 // Play player death sound
                 audioSystem.playSound("player_death");
-                app->changeState("menu");
+                app->changeState("game-over");
             }
             checkDemonProximity(world, deltaTime);
+            // renderHUD(world);
         }
         else
         {
@@ -523,6 +525,8 @@ namespace our
                         // Play demon death sound when monkey (demon) is hit
                         audioSystem.playVoice("demon_death");
 
+                        totalkilled++;
+
                         // Update cursor position and make it face the camera (billboard effect)
                         auto cursorTransform = cursor->localTransform;
                         cursorTransform.position = hitPoint + hitNormal * 0.01f;
@@ -584,7 +588,7 @@ namespace our
         for (auto entity : world->getEntities())
         {
             // Skip if this isn't a demon (monkey)
-            if (entity->name != "monkey")
+            if (entity->name != "demon")
                 continue;
 
             // Calculate distance to player
@@ -753,7 +757,7 @@ namespace our
         {
             // Create capsule shape for character controller
             btConvexShape *capsule = new btCapsuleShapeZ(
-                0.5f,
+                0.7f,
                 2.0f);
 
             // Create ghost object
@@ -893,5 +897,6 @@ namespace our
             }
         }
     }
+
 
 }

@@ -183,13 +183,16 @@ namespace our
         // Spawner members
         float spawnTimer = 0.0f;
         float spawnInterval = 5.0f;
-        int maxActiveDemons = 2;
+        int maxActiveDemons = 5;
         glm::vec3 defaultTarget = {3.322420, -16.994026, 103.242325};
+
+        // Number of active demons
 
         float lastHitTime = 0;
         const float HIT_COOLDOWN = 0.5f; // Seconds between damage ticks
 
     public:
+    int totalkilled = 0; 
         void initialize(World *world, glm::ivec2 windowSize);
         void update(World *world, float deltaTime, Application *app);
         void destroy();
