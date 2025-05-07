@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0)   # Selects the minimum version of CMake required to run this file
+cmake_minimum_required(VERSION 3.0)   # Selects the minimum version of CMake required to run this file
 project(GFX-LAB VERSION 0.1.0)          # Here we select the project name and version
 
 # Here we select C++17 with all the standards required and all compiler-specific extensions disabled
@@ -24,6 +24,10 @@ set(BUILD_CLSOCKET OFF CACHE BOOL "" FORCE)
 
 # Add Bullet Physics subdirectory
 add_subdirectory(vendor/bullet3)
+
+# Set SDL2 and SDL2_mixer paths (manually pointing to vendor directory)
+set(SDL2_PATH "${CMAKE_SOURCE_DIR}/vendor/SDL2" CACHE PATH "Path to SDL2 directory")
+set(SDL2_MIXER_PATH "${CMAKE_SOURCE_DIR}/vendor/SDL2_mixer" CACHE PATH "Path to SDL2_mixer directory")
 
 # A variable with all the source files of GLAD
 set(GLAD_SOURCE vendor/glad/src/gl.c)
@@ -104,7 +108,10 @@ set(COMMON_SOURCES
         source/common/systems/physics.hpp
         source/common/systems/physics.cpp
         source/common/light/light-utils.hpp
-
+        
+        # Audio system files
+        source/common/audio/audio-system.hpp
+        source/common/audio/audio-system.cpp
 )
 
 # Define the directories in which to search for the included headers
@@ -117,6 +124,8 @@ include_directories(
         vendor/utils
         vendor/bullet3/src
         vendor/tinygltf
+        ${SDL2_PATH}/include
+        ${SDL2_MIXER_PATH}/include
 )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
@@ -141,4 +150,31 @@ set(STATES_SOURCES
 # Each target compiles one example source file and the common & vendor source files
 # Then we link GLFW and Bullet Physics with each target
 add_executable(GAME_APPLICATION source/main.cpp ${STATES_SOURCES} ${COMMON_SOURCES} ${VENDOR_SOURCES})
-target_link_libraries(GAME_APPLICATION glfw BulletDynamics BulletCollision LinearMath)
+
+# Set up architecture-specific paths for SDL
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    # 64-bit
+    set(SDL_LIB_DIR "lib/x64")
+else()
+    # 32-bit
+    set(SDL_LIB_DIR "lib/x86")
+endif()
+
+# Link libraries
+target_link_libraries(GAME_APPLICATION 
+    glfw 
+    BulletDynamics 
+    BulletCollision 
+    LinearMath
+    "${SDL2_PATH}/${SDL_LIB_DIR}/SDL2.lib"
+    "${SDL2_PATH}/${SDL_LIB_DIR}/SDL2main.lib"
+    "${SDL2_MIXER_PATH}/${SDL_LIB_DIR}/SDL2_mixer.lib"
+)
+
+# Copy DLLs to output directory post-build
+add_custom_command(TARGET GAME_APPLICATION POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${SDL2_PATH}/${SDL_LIB_DIR}/SDL2.dll"
+        "${SDL2_MIXER_PATH}/${SDL_LIB_DIR}/SDL2_mixer.dll"
+        $<TARGET_FILE_DIR:GAME_APPLICATION>
+)

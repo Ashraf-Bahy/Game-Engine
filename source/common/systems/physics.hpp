@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <LinearMath/btIDebugDraw.h>
 #include <BulletDynamics/Character/btKinematicCharacterController.h>
+#include "../audio/audio-system.hpp" // Add this line
 
 namespace our
 {
@@ -124,6 +125,7 @@ namespace our
         // std::vector<HitMarker> activeHitMarkers;
         float fireCooldown = 0.0f;
         const float FIRE_RATE = 0.5f; // Seconds between shots
+        AudioSystem audioSystem; // Add this line
 
     public:
         void initialize(World *world, glm::ivec2 windowSize);
@@ -147,6 +149,10 @@ namespace our
                      Entity *&hitEntity, glm::vec3 &hitPoint, glm::vec3 &hitNormal);
 
         void fireBullet(World *world, Application *app, float deltaTime);
+
+        void checkDemonProximity(World *world, float deltaTime);
+
+        AudioSystem& getAudioSystem() { return audioSystem; }
     };
 
 }
