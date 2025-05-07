@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <LinearMath/btIDebugDraw.h>
 #include <BulletDynamics/Character/btKinematicCharacterController.h>
+#include "../audio/audio-system.hpp" // Add this line
 #include "../components/Health.hpp"
 
 namespace our
@@ -170,6 +171,23 @@ namespace our
         // std::vector<HitMarker> activeHitMarkers;
         float fireCooldown = 0.0f;
         const float FIRE_RATE = 0.5f; // Seconds between shots
+        AudioSystem audioSystem;      // Add this line
+
+        std::vector<Entity *> demonPool;
+        Entity *demonTemplate = nullptr;
+
+        // For demons
+        std::vector<btPairCachingGhostObject *> demonGhosts;
+        std::vector<btKinematicCharacterController *> demonControllers;
+
+        // Spawner members
+        float spawnTimer = 0.0f;
+        float spawnInterval = 5.0f;
+        int maxActiveDemons = 2;
+        glm::vec3 defaultTarget = {3.322420, -16.994026, 103.242325};
+
+        float lastHitTime = 0;
+        const float HIT_COOLDOWN = 0.5f; // Seconds between damage ticks
 
         std::vector<Entity *> demonPool;
         Entity *demonTemplate = nullptr;
@@ -231,6 +249,10 @@ namespace our
         void updateSpawning(World *world, float deltaTime);
 
         void checkPlayerDemonCollisions(World *world);
+
+        void checkDemonProximity(World *world, float deltaTime);
+
+        AudioSystem &getAudioSystem() { return audioSystem; }
     };
 
 }
