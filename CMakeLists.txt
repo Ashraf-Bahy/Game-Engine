@@ -72,6 +72,7 @@ set(COMMON_SOURCES
         source/common/texture/texture-utils.cpp
         source/common/texture/screenshot.hpp
         source/common/texture/screenshot.cpp
+        source/common/texture/stb_impl.cpp
 
         source/common/material/pipeline-state.hpp
         source/common/material/pipeline-state.cpp
@@ -166,15 +167,15 @@ target_link_libraries(GAME_APPLICATION
     BulletDynamics 
     BulletCollision 
     LinearMath
-    "${SDL2_PATH}/${SDL_LIB_DIR}/SDL2.lib"
-    "${SDL2_PATH}/${SDL_LIB_DIR}/SDL2main.lib"
-    "${SDL2_MIXER_PATH}/${SDL_LIB_DIR}/SDL2_mixer.lib"
+    "${SDL2_PATH}/lib/x64/SDL2.dll"
+    "${SDL2_PATH}/lib/x64/SDL2main.lib"
+    "${SDL2_MIXER_PATH}/lib/x64/SDL2_mixer.lib"
 )
 
 # Copy DLLs to output directory post-build
 add_custom_command(TARGET GAME_APPLICATION POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${SDL2_PATH}/${SDL_LIB_DIR}/SDL2.dll"
-        "${SDL2_MIXER_PATH}/${SDL_LIB_DIR}/SDL2_mixer.dll"
+        "${SDL2_PATH}/lib/x64/SDL2.dll"
+        "${SDL2_MIXER_PATH}/lib/x64/SDL2_mixer.dll"
         $<TARGET_FILE_DIR:GAME_APPLICATION>
 )

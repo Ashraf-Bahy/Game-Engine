@@ -58,7 +58,7 @@ class Playstate : public our::State
 
         physicsSystem.update(&world, (float)deltaTime, getApp());
         physicsSystem.updateCharacterMovement(&world, cameraController, (float)deltaTime);
-        physicsSystem.debugDrawWorld(&world);
+        // physicsSystem.debugDrawWorld(&world);
         physicsSystem.updateSpawning(&world, deltaTime);
 
         if (keyboard.justPressed(GLFW_KEY_ESCAPE))
