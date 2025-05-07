@@ -431,7 +431,7 @@ namespace our
             if (health->currentHealth <= 0)
             {
                 // Play player death sound
-                audioSystem.playSound("player_death.mp3");
+                audioSystem.playSound("player_death");
                 app->changeState("menu");
             }
             checkDemonProximity(world, deltaTime);
