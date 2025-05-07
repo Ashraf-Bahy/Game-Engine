@@ -189,22 +189,6 @@ namespace our
         float lastHitTime = 0;
         const float HIT_COOLDOWN = 0.5f; // Seconds between damage ticks
 
-        std::vector<Entity *> demonPool;
-        Entity *demonTemplate = nullptr;
-
-        // For demons
-        std::vector<btPairCachingGhostObject *> demonGhosts;
-        std::vector<btKinematicCharacterController *> demonControllers;
-
-        // Spawner members
-        float spawnTimer = 0.0f;
-        float spawnInterval = 5.0f;
-        int maxActiveDemons = 2;
-        glm::vec3 defaultTarget = {3.322420, -16.994026, 103.242325};
-
-        float lastHitTime = 0;
-        const float HIT_COOLDOWN = 0.5f; // Seconds between damage ticks
-
     public:
         void initialize(World *world, glm::ivec2 windowSize);
         void update(World *world, float deltaTime, Application *app);

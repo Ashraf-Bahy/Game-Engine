@@ -8,13 +8,15 @@
 #include <vector>
 #include <filesystem>
 
-bool our::screenshot_png(const std::string& filename, bool include_alpha) {
+bool our::screenshot_png(const std::string &filename, bool include_alpha)
+{
 
     // Read the current viewport parameters
-    struct {
+    struct
+    {
         int x = 0, y = 0, w = 0, h = 0;
     } viewport;
-    glGetIntegerv(GL_VIEWPORT, (GLint*)&viewport);
+    glGetIntegerv(GL_VIEWPORT, (GLint *)&viewport);
 
     // If alpha is included, we have 4 components (RGBA). Otherwise, we only have 3 (RGB).
     uint8_t components = include_alpha ? 4 : 3;
@@ -36,7 +38,8 @@ bool our::screenshot_png(const std::string& filename, bool include_alpha) {
     // Make sure the directory in which we want to save screenshot exists. If not, create it.
     std::error_code ec;
     std::filesystem::create_directories(std::filesystem::path(filename).parent_path(), ec);
-    if(ec) return false;
+    if (ec)
+        return false;
 
     // Save image and return whether it succeeded or not
     return stbi_write_png(filename.c_str(), viewport.w, viewport.h, components, data.data(), 0);
