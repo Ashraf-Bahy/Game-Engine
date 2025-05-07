@@ -43,7 +43,7 @@ class Playstate : public our::State
         auto size = getApp()->getFrameBufferSize();
         renderer.initialize(size, config["renderer"]);
         physicsSystem.initialize(&world, size);
-        physicsSystem.initializeDemons(&world, 10); // Pool size 10
+        physicsSystem.initializeDemons(&world, 2); // Pool size 10
     }
 
     void onDraw(double deltaTime) override

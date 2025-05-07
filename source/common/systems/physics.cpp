@@ -24,6 +24,7 @@ namespace our
     void PhysicsSystem::initialize(World *world, glm::ivec2 windowSize)
     {
         // Initialize Bullet Physics components
+        ourWorld = world;
         broadphase = new btDbvtBroadphase();
         collisionConfiguration = new btDefaultCollisionConfiguration();
         dispatcher = new btCollisionDispatcher(collisionConfiguration);
@@ -56,10 +57,18 @@ namespace our
             playerGhost, (btConvexShape *)capsule, 0.35f /*step height*/, btVector3(0, 1, 0));
         characterController->setGravity(btVector3(0, -9.81f, 0)); // Set gravity for the character controller
 
+        playerGhost->setCollisionFlags(
+            btCollisionObject::CF_CHARACTER_OBJECT |
+            btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
         // 4. Add to the world
         dynamicsWorld->addCollisionObject(playerGhost,
                                           btBroadphaseProxy::CharacterFilter,
-                                          btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter);
+                                          btBroadphaseProxy::StaticFilter | // Mask
+                                              btBroadphaseProxy::CharacterFilter);
+        // but now this does not collide with the dynamic objects
+        // it only collide with static and kinematic objects
+        Entity *player = world->getEntity("player");
+        playerGhost->setUserPointer(player);
         dynamicsWorld->addAction(characterController); // Important!
         dynamicsWorld->updateSingleAabb(playerGhost);  // Update AABB for the ghost object
 
@@ -323,18 +332,28 @@ namespace our
             }
 
             // Spawn if under limit
-            if (activeCount < maxActiveDemons)
+            glm::vec3 spawnPos;
+            if (activeCount == 0)
             {
-                glm::vec3 spawnPos = {
-                    rand() % 20 - 10.0f, // -10 to 10
-                    0.0f,
-                    rand() % 20 - 10.0f};
+                spawnPos = {0.0f, 10.0f, 10.0f}; // Spawn at the origin
+            }
+            else
+            {
+                spawnPos = {0.0f, -10.0f, -10.0f}; // Random spawn position
+            }
+
+            if (activeCount <= maxActiveDemons && demonPool.size())
+            {
+                // glm::vec3 spawnPos = {
+                //     rand() % 20 - 10.0f, // -10 to 10
+                //     0.0f,
+                //     rand() % 20 - 10.0f};
 
                 // glm::vec3 spawnPos = {
                 //     0.0f, // -10 to 10
                 //     0.0f,
                 //     0.0f};
-
+                printf("Spawning demon at: %f, %f, %f\n", spawnPos.x, spawnPos.y, spawnPos.z);
                 spawnDemon(spawnPos, defaultTarget, world);
             }
         }
@@ -346,24 +365,41 @@ namespace our
         if (dynamicsWorld)
         {
             dynamicsWorld->stepSimulation(deltaTime);
+
+            dynamicsWorld->updateAabbs();             // Updates all bounding boxes
+            dynamicsWorld->computeOverlappingPairs(); // Rebuilds collision pairs
+
             processEntities(world);
             dynamicsWorld->updateSingleAabb(playerGhost); // Update AABB for the ghost object
             // moveCharacter(world, deltaTime);
             fireBullet(world, app, deltaTime);
-            // Update demon movement
+
+            // Update autoo demons movement
             int i = 0;
             for (auto entity : world->getEntities())
             {
                 if (auto demon = entity->getComponent<DemonComponent>())
                 {
-                    printf("Demon %d: %s\n", i++, entity->name.c_str());
                     if (entity->enabled)
                     {
+                        if (auto mesh = entity->getComponent<MeshRendererComponent>())
+                        {
+                            if (mesh->ghostObject)
+                            {
+                                dynamicsWorld->updateSingleAabb(mesh->ghostObject);
+                            }
+                        }
                         updateDemonMovement(entity, deltaTime);
                         demon->update(deltaTime);
                     }
                 }
             }
+
+            checkPlayerDemonCollisions(world);
+            Entity *player = world->getEntity("player");
+            auto health = player->getComponent<HealthComponent>();
+
+            health->update(deltaTime);
         }
         else
         {
@@ -440,7 +476,8 @@ namespace our
                 if (raycast(start, end, hitEntity, hitPoint, hitNormal))
                 {
                     printf("entity name: %s\n", hitEntity->name.c_str());
-                    if (hitEntity->name == "monkey")
+                    printf("hit point: %f %f %f\n", hitPoint.x, hitPoint.y, hitPoint.z);
+                    if (hitEntity->name == "demon")
                     {
 
                         // Update cursor position and make it face the camera (billboard effect)
@@ -454,14 +491,20 @@ namespace our
                             glm::quatLookAt(toCamera, glm::vec3(0, 1, 0)));
 
                         cursor->localTransform = cursorTransform;
-                        if (auto meshRenderer = hitEntity->getComponent<MeshRendererComponent>())
+                        if (auto mesh = hitEntity->getComponent<MeshRendererComponent>())
                         {
-                            if (meshRenderer->bulletBody)
+                            if (mesh->characterController)
                             {
-                                dynamicsWorld->removeRigidBody(meshRenderer->bulletBody);
-                                delete meshRenderer->bulletBody->getMotionState();
-                                delete meshRenderer->bulletBody;
-                                meshRenderer->bulletBody = nullptr;
+                                // Character controller
+                                dynamicsWorld->removeAction(mesh->characterController);
+                                dynamicsWorld->removeCollisionObject(mesh->ghostObject);
+
+                                delete mesh->characterController;
+                                delete mesh->ghostObject->getCollisionShape();
+                                delete mesh->ghostObject;
+
+                                mesh->characterController = nullptr;
+                                mesh->ghostObject = nullptr;
                             }
                         }
                         printf("Hit entity: sucecss\n");
@@ -517,13 +560,15 @@ namespace our
     Entity *PhysicsSystem::spawnDemon(glm::vec3 position, glm::vec3 target, World *world)
     {
         printf("spawning demon at %f %f %f\n", position.x, position.y, position.z);
+        // if (demonPool.empty())
+        // {
+        //     // Create more if pool is empty
+        //     Entity *demon = cloneDemon(demonTemplate, world);
+        //     initializeDemonPhysics(demon);
+        //     demonPool.push_back(demon);
+        // }
         if (demonPool.empty())
-        {
-            // Create more if pool is empty
-            Entity *demon = cloneDemon(demonTemplate, world);
-            initializeDemonPhysics(demon);
-            demonPool.push_back(demon);
-        }
+            return nullptr;
 
         Entity *demon = demonPool.back();
         demonPool.pop_back();
@@ -580,10 +625,15 @@ namespace our
     Entity *PhysicsSystem::cloneDemon(Entity *original, World *world)
     {
         if (!original)
+        {
             printf("trying to clone a null demon\n");
+            return nullptr;
+        }
 
         Entity *clone = world->add();
         clone->localTransform = original->localTransform;
+
+        clone->name = "demon";
 
         // Clone components
         if (auto originalComp = original->getComponent<DemonComponent>())
@@ -641,13 +691,24 @@ namespace our
                 mesh->characterController->setGravity(btVector3(0, -9.81f, 0));
                 mesh->characterController->setFallSpeed(55.0f);
                 mesh->characterController->setJumpSpeed(demonComp->jumpSpeed);
-                mesh->characterController->setMaxJumpHeight(1.0f);
+                mesh->characterController->setMaxJumpHeight(15.0f);
             }
+
+            // MUST SET THESE for the callllll back
+            mesh->ghostObject->setCollisionFlags(
+                btCollisionObject::CF_CHARACTER_OBJECT |
+                btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK |
+                btCollisionObject::CF_NO_CONTACT_RESPONSE); // Prevents physics push);
 
             // Add to world
             dynamicsWorld->addCollisionObject(mesh->ghostObject,
                                               btBroadphaseProxy::CharacterFilter,
-                                              btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter);
+                                              btBroadphaseProxy::AllFilter);
+
+            mesh->ghostObject->setCollisionFlags(
+                btCollisionObject::CF_CHARACTER_OBJECT |
+                btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK // Enables raycasts
+            );
             dynamicsWorld->addAction(mesh->characterController);
 
             // Store reference to entity
@@ -657,27 +718,31 @@ namespace our
 
     void PhysicsSystem::updateDemonMovement(Entity *demon, float deltaTime)
     {
-        printf("updating demon movement\n");
         if (auto demonComp = demon->getComponent<DemonComponent>())
         {
             if (auto mesh = demon->getComponent<MeshRendererComponent>())
             {
                 if (mesh->characterController)
                 {
-                    // Calculate movement direction
+                    // 1. Handle Jumping
+                    if (demonComp->canJump() && mesh->characterController->canJump())
+                    {
+                        mesh->characterController->jump(btVector3(0, demonComp->jumpPower, 0));
+                        demonComp->resetJumpTimer();
+                    }
+
+                    // 2. Calculate movement direction
                     glm::vec3 targetDir = glm::normalize(
                         demonComp->targetPosition - demon->localTransform.position);
 
-                    // Convert to bullet vector and apply speed
+                    // 3. Apply movement
                     btVector3 walkDirection(
                         targetDir.x * demonComp->moveSpeed,
-                        targetDir.y * demonComp->moveSpeed,
+                        0, // Zero Y movement - let jump handle vertical
                         targetDir.z * demonComp->moveSpeed);
-
-                    // Apply movement
                     mesh->characterController->setWalkDirection(walkDirection);
 
-                    // Update entity transform from physics
+                    // 4. Update transform
                     btTransform transform;
                     if (mesh->ghostObject)
                     {
@@ -687,12 +752,51 @@ namespace our
                             transform.getOrigin().y(),
                             transform.getOrigin().z());
 
-                        // Optional: Update rotation to face movement direction
+                        // Face movement direction
                         if (walkDirection.length2() > 0.1f)
                         {
                             float yaw = atan2(walkDirection.x(), walkDirection.z());
                             demon->localTransform.rotation.y = yaw;
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    // handling collisions in the system
+    void PhysicsSystem::checkPlayerDemonCollisions(World *world)
+    {
+        Entity *player = world->getEntity("player");
+        if (!player)
+            return;
+
+        // Only check if cooldown expired
+        float currentTime = glfwGetTime();
+        if (currentTime - lastHitTime < HIT_COOLDOWN)
+            return;
+
+        DemonContactCallback callback(player, this, world);
+
+        // Check against all active demons
+        for (auto entity : world->getEntities())
+        {
+            if (entity->name == "demon" && entity->enabled)
+            {
+                // printf("entity name demon f3lan\n");
+                if (auto mesh = entity->getComponent<MeshRendererComponent>())
+                {
+                    if (mesh->ghostObject)
+                    {
+                        // printf("found ghost object\n");
+                        dynamicsWorld->contactPairTest(
+                            playerGhost,
+                            mesh->ghostObject,
+                            callback);
+                    }
+                    else
+                    {
+                        printf("Demon %s has no ghost object!\n", entity->name.c_str());
                     }
                 }
             }

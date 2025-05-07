@@ -323,6 +323,13 @@
           },
           {
             "type": "Free Camera Controller"
+          },
+          {
+            "type": "HealthComponent",
+            "maxHealth": 100,
+            "currentHealth": 100,
+            "invulnerabilityTime": 0.5,
+            "damageFlashColor": [1.0, 0.0, 0.0, 1.0] // Red flash when hit
           }
         ],
         "children": [
@@ -441,19 +448,19 @@
           }
         ]
       },
-      // {
-      //   "name": "monkey",
-      //   "rotation": [-45, 0, 0],
-      //   "position": [7, 5, 0],
-      //   "components": [
-      //     {
-      //       "type": "Mesh Renderer",
-      //       "mesh": "monkey",
-      //       "material": "monkey",
-      //       "dynamic": true
-      //     }
-      //   ]
-      // },
+      {
+        "name": "monkey",
+        "rotation": [-45, 0, 0],
+        "position": [7, 5, 0],
+        "components": [
+          {
+            "type": "Mesh Renderer",
+            "mesh": "monkey",
+            "material": "monkey",
+            "dynamic": true
+          }
+        ]
+      },
       // {
       //   "position": [0, 1, -2],
       //   "rotation": [0, 0, 0],
@@ -644,13 +651,45 @@
       //     }
       //   ]
       // },
+      // {
+      //   "name": "demon_template",
+      //   "rotation": [-45, 0, 0],
+      //   "position": [7, 20, 0],
+      //   "components": [
+      //     {
+      //       "type": "Mesh Renderer",
+      //       "mesh": "monkey",
+      //       "material": "monkey",
+      //       "characterController": {
+      //         "radius": 0.5,
+      //         "height": 2.0,
+      //         "stepHeight": 0.35
+      //       }
+      //     },
+      //     {
+      //       "type": "DemonComponent",
+      //       "targetPosition": [10, 0, 10],
+      //       "moveSpeed": 0.06,
+      //       "jumpSpeed": 10,
+      //       "damage": 15,
+      //       "attackRange": 2.0,
+      //       "health": 100,
+      //       "maxHealth": 100,
+      //       "contactDamage": 10,
+      //       "damageCooldown": 1.0,
+      //       "jumpInterval": 1.0,
+      //       "jumpPower": 12.0
+      //     }
+      //   ]
+      // },
       {
         "name": "demon_template",
+        "position": [7, 20, 0],
         "components": [
           {
             "type": "Mesh Renderer",
-            "mesh": "monkey",
-            "material": "monkey",
+            "mesh": "monster",
+            "material": "monster",
             "characterController": {
               "radius": 0.5,
               "height": 2.0,
@@ -660,14 +699,37 @@
           {
             "type": "DemonComponent",
             "targetPosition": [10, 0, 10],
-            "moveSpeed": 1.5,
-            "jumpSpeed": 0.0,
+            "moveSpeed": 0.06,
+            "jumpSpeed": 10,
             "damage": 15,
             "attackRange": 2.0,
             "health": 100,
             "maxHealth": 100,
             "contactDamage": 10,
-            "damageCooldown": 1.0
+            "damageCooldown": 1.0,
+            "jumpInterval": 1.0,
+            "jumpPower": 12.0
+          }
+        ],
+        "children": [
+          {
+            "name": "Spot Light",
+            "position": [0, 3, 0],
+            "components": [
+              {
+                "type": "Light Component",
+                "lightType": "Spot",
+                "direction": [0, -1, 0],
+                "ambient": [0.2, 0.2, 0.2],
+                "diffuse": [1, 0, 0],
+                "specular": [0.9, 0.9, 0.9],
+                "cutOff": 27,
+                "outerCutOff": 40,
+                "attenuationConstant": 1.0,
+                "attenuationLinear": 0.35,
+                "attenuationQuadratic": 0.44
+              }
+            ]
           }
         ]
       }

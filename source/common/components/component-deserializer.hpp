@@ -7,6 +7,7 @@
 #include "movement.hpp"
 #include "light.hpp"
 #include "demon.hpp"
+#include "Health.hpp"
 
 namespace our
 {
@@ -41,6 +42,10 @@ namespace our
         else if (type == DemonComponent::getID())
         {
             component = entity->addComponent<DemonComponent>();
+        }
+        else if (type == HealthComponent::getID())
+        {
+            component = entity->addComponent<HealthComponent>();
         }
         if (component)
             component->deserialize(data);

@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <LinearMath/btIDebugDraw.h>
 #include <BulletDynamics/Character/btKinematicCharacterController.h>
+#include "../components/Health.hpp"
 
 namespace our
 {
@@ -110,6 +111,51 @@ namespace our
     class PhysicsSystem
     {
     private:
+        // Add contact callback
+        class DemonContactCallback : public btCollisionWorld::ContactResultCallback
+        {
+        public:
+            Entity *player;
+            PhysicsSystem *system;
+            World *world;
+
+            DemonContactCallback(Entity *p, PhysicsSystem *s, World *w)
+                : player(p), system(s), world(w) {}
+
+            btScalar addSingleResult(btManifoldPoint &cp,
+                                     const btCollisionObjectWrapper *colObj0, int partId0, int index0,
+                                     const btCollisionObjectWrapper *colObj1, int partId1, int index1)
+            {
+                // printf("got into callback");
+                Entity *entityA = static_cast<Entity *>(colObj0->getCollisionObject()->getUserPointer());
+                Entity *entityB = static_cast<Entity *>(colObj1->getCollisionObject()->getUserPointer());
+
+                if (!entityA || !entityB)
+                    printf("entity is null\n");
+
+                // printf("entitya name: %s\n", entityA->name.c_str());
+                // printf("entityb name: %s\n", entityB->name.c_str());
+                Entity *demon = (entityA == player) ? entityB : entityA;
+
+                // printf("got into callback");
+                if (demon && demon->name == "demon")
+                {
+                    printf("hit demon\n");
+                    if (auto health = player->getComponent<HealthComponent>())
+                    {
+                        if (auto demonComp = demon->getComponent<DemonComponent>())
+                        {
+                            health->takeDamage(demonComp->contactDamage);
+                            system->lastHitTime = glfwGetTime();
+                            printf("demon damage: %d\n", health->currentHealth);
+                        }
+                    }
+                }
+                return 0;
+            }
+        };
+
+        World *ourWorld = nullptr;
         btBroadphaseInterface *broadphase;
         btDefaultCollisionConfiguration *collisionConfiguration;
         btCollisionDispatcher *dispatcher;
@@ -136,7 +182,10 @@ namespace our
         float spawnTimer = 0.0f;
         float spawnInterval = 5.0f;
         int maxActiveDemons = 2;
-        glm::vec3 defaultTarget = {0, 0, 0};
+        glm::vec3 defaultTarget = {3.322420, -16.994026, 103.242325};
+
+        float lastHitTime = 0;
+        const float HIT_COOLDOWN = 0.5f; // Seconds between damage ticks
 
     public:
         void initialize(World *world, glm::ivec2 windowSize);
@@ -178,8 +227,10 @@ namespace our
             defaultTarget = target;
         }
 
-        // Call this every frame
+        // we call this every frame
         void updateSpawning(World *world, float deltaTime);
+
+        void checkPlayerDemonCollisions(World *world);
     };
 
 }
