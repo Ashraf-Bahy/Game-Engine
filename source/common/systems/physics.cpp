@@ -76,6 +76,9 @@ namespace our
             audioSystem.loadSound("demon_growl", "assets/audio/voice/demon_growl.mp3", AudioType::VOICE);
             audioSystem.loadSound("demon_death", "assets/audio/voice/demon_death.mp3", AudioType::VOICE);
             audioSystem.loadSound("narration_intro", "assets/audio/voice/narration_intro.mp3", AudioType::VOICE);
+            
+            audioSystem.loadSound("health_damage", "assets/audio/sfx/health_damage.mp3", AudioType::SOUND_EFFECT);
+            audioSystem.loadSound("player_death", "assets/audio/sfx/player_death.mp3", AudioType::SOUND_EFFECT);
             audioSystem.loadSound("background", "assets/audio/music/background.mp3", AudioType::MUSIC);
             
             // Play introduction narration
