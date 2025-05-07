@@ -63,6 +63,28 @@ namespace our
         dynamicsWorld->addAction(characterController); // Important!
         dynamicsWorld->updateSingleAabb(playerGhost);  // Update AABB for the ghost object
 
+        // Initialize audio system
+        if (!audioSystem.initialize()) {
+            printf("[ERROR] Failed to initialize audio system!\n");
+        } else {
+            printf("[INFO] Audio system initialized successfully.\n");
+            
+            // Load audio files
+            // Note: You need to add appropriate WAV and MP3 files to these directories
+            audioSystem.loadSound("bullet_shoot", "assets/audio/sfx/bullet_shoot.mp3", AudioType::SOUND_EFFECT);
+            audioSystem.loadSound("bullet_impact", "assets/audio/sfx/bullet_impact.mp3", AudioType::SOUND_EFFECT);
+            audioSystem.loadSound("demon_growl", "assets/audio/voice/demon_growl.mp3", AudioType::VOICE);
+            audioSystem.loadSound("demon_death", "assets/audio/voice/demon_death.mp3", AudioType::VOICE);
+            audioSystem.loadSound("narration_intro", "assets/audio/voice/narration_intro.mp3", AudioType::VOICE);
+            audioSystem.loadSound("background", "assets/audio/music/background.mp3", AudioType::MUSIC);
+            
+            // Play introduction narration
+            audioSystem.playVoice("narration_intro");
+            
+            // Start background music
+            audioSystem.playMusic("background", -1); // -1 means loop indefinitely
+        }
+
         // Create rigid bodies for entities with a MeshRendererComponent
         for (auto &entity : world->getEntities())
         {
@@ -303,8 +325,37 @@ namespace our
 
     void PhysicsSystem::update(World *world, float deltaTime, Application *app)
     {
+        // Handle volume control keys
+        auto& keyboard = app->getKeyboard();
+        
+        // Press - key to lower volume
+        if (keyboard.justPressed(GLFW_KEY_MINUS)) {
+            int currentVolume = audioSystem.getMusicVolume();
+            audioSystem.setMusicVolume(std::max(0, currentVolume - 16));
+            printf("[INFO] Music volume decreased to: %d\n", audioSystem.getMusicVolume());
+        }
+        
+        // Press = key to increase volume
+        if (keyboard.justPressed(GLFW_KEY_EQUAL)) {
+            int currentVolume = audioSystem.getMusicVolume();
+            audioSystem.setMusicVolume(std::min(MIX_MAX_VOLUME, currentVolume + 16));
+            printf("[INFO] Music volume increased to: %d\n", audioSystem.getMusicVolume());
+        }
+        
+        // Press 0 key to mute/unmute music
+        if (keyboard.justPressed(GLFW_KEY_0)) {
+            static int savedVolume = MIX_MAX_VOLUME;
+            if (audioSystem.getMusicVolume() > 0) {
+                savedVolume = audioSystem.getMusicVolume();
+                audioSystem.setMusicVolume(0);
+                printf("[INFO] Music muted\n");
+            } else {
+                audioSystem.setMusicVolume(savedVolume);
+                printf("[INFO] Music unmuted to: %d\n", savedVolume);
+            }
+        }
+        
         // Step the physics simulation
-
         if (dynamicsWorld)
         {
             dynamicsWorld->stepSimulation(deltaTime);
@@ -312,6 +363,7 @@ namespace our
             dynamicsWorld->updateSingleAabb(playerGhost); // Update AABB for the ghost object
             // moveCharacter(world, deltaTime);
             fireBullet(world, app, deltaTime);
+            checkDemonProximity(world, deltaTime);
         }
         else
         {
@@ -376,6 +428,8 @@ namespace our
         {
             if (fireCooldown <= 0)
             {
+                // Play bullet shooting sound
+                audioSystem.playSound("bullet_shoot");
 
                 Entity *player = world->getEntity("player");
                 glm::vec3 start = player->localTransform.position;
@@ -388,8 +442,14 @@ namespace our
                 if (raycast(start, end, hitEntity, hitPoint, hitNormal))
                 {
                     printf("entity name: %s\n", hitEntity->name.c_str());
+                    
+                    // Play bullet impact sound
+                    audioSystem.playSound("bullet_impact");
+                    
                     if (hitEntity->name == "monkey")
                     {
+                        // Play demon death sound when monkey (demon) is hit
+                        audioSystem.playVoice("demon_death");
 
                         // Update cursor position and make it face the camera (billboard effect)
                         auto cursorTransform = cursor->localTransform;
@@ -424,10 +484,56 @@ namespace our
                     cursor->localTransform.position = glm::vec3(0, 0, -100);
                     printf("did not Hit entity: sucecss\n");
                 }
+                fireCooldown = FIRE_RATE;
             }
-            fireCooldown = FIRE_RATE;
         }
     }
+
+    void PhysicsSystem::checkDemonProximity(World *world, float deltaTime)
+    {
+        // Get player entity
+        Entity *player = world->getEntity("player");
+        if (!player) return;
+        
+        glm::vec3 playerPos = player->localTransform.position;
+        
+        // Check for demons (monkeys) nearby
+        static std::unordered_map<unsigned int, float> growlCooldowns;
+        const float GROWL_COOLDOWN = 5.0f; // Don't growl again for 5 seconds
+        const float GROWL_DISTANCE = 15.0f; // Distance at which demons growl
+        
+        for (auto entity : world->getEntities())
+        {
+            // Skip if this isn't a demon (monkey)
+            if (entity->name != "monkey") continue;
+            
+            // Calculate distance to player
+            float distance = glm::length(entity->localTransform.position - playerPos);
+            
+            // Check if this demon is close enough and not on cooldown
+            auto it = growlCooldowns.find(entity->id);
+            bool onCooldown = (it != growlCooldowns.end() && it->second > 0);
+            
+            if (distance <= GROWL_DISTANCE && !onCooldown)
+            {
+                // Play growl sound
+                audioSystem.playVoice("demon_growl");
+                
+                // Set cooldown
+                growlCooldowns[entity->id] = GROWL_COOLDOWN;
+                
+                // Debug info
+                printf("Demon at distance %.2f growled at player\n", distance);
+            }
+        }
+        
+        // Update cooldowns
+        for (auto& [id, cooldown] : growlCooldowns)
+        {
+            cooldown -= deltaTime;
+        }
+    }
+
     void PhysicsSystem::destroy()
     {
         // Clean up Bullet Physics resources
@@ -443,5 +549,8 @@ namespace our
         delete collisionConfiguration;
         delete broadphase;
         delete debugDrawer;
+        
+        // Clean up audio system
+        audioSystem.destroy();
     }
 }
